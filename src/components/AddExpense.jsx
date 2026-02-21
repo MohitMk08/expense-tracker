@@ -1,70 +1,78 @@
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { addExpense } from "../firebase/expenseService";
 
-export default function AddExpense({ setExpenses }) {
-    const [text, setText] = useState("");
+export default function AddExpense() {
+    const { user } = useAuth();
+
     const [amount, setAmount] = useState("");
-    const [image, setImage] = useState(null);
+    const [description, setDescription] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    const handleImage = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    const submit = async () => {
+        if (!amount || !description) {
+            setError("Amount and description are required");
+            return;
+        }
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setImage(reader.result);
-        };
-        reader.readAsDataURL(file);
-    };
+        try {
+            setLoading(true);
+            setError("");
 
-    const addExpense = () => {
-        if (!text || !amount) return;
+            await addExpense({
+                uid: user.uid,
+                amount,
+                description,
+            });
 
-        setExpenses(prev => [
-            {
-                id: Date.now(),
-                text,
-                amount: Number(amount),
-                image, // base64 screenshot
-            },
-            ...prev,
-        ]);
-
-        setText("");
-        setAmount("");
-        setImage(null);
+            setAmount("");
+            setDescription("");
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="card p-4 rounded mb-4">
-            <input
-                className="w-full p-2 mb-2 border rounded bg-transparent"
-                placeholder="Description"
-                value={text}
-                onChange={e => setText(e.target.value)}
-            />
+        <section className="w-full max-w-xl mx-auto">
+            <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm p-4 sm:p-6 space-y-4">
 
-            <input
-                type="number"
-                className="w-full p-2 mb-2 border rounded bg-transparent"
-                placeholder="Amount"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-            />
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    Add Expense
+                </h3>
 
-            <input
-                type="file"
-                accept="image/*"
-                className="w-full text-sm mb-3"
-                onChange={handleImage}
-            />
+                {error && (
+                    <p className="text-sm text-red-500">{error}</p>
+                )}
 
-            <button
-                onClick={addExpense}
-                disabled={!text || !amount}
-                className="w-full py-2 rounded disabled:opacity-50"
-            >
-                Add Expense
-            </button>
-        </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <input
+                        type="number"
+                        placeholder="Amount"
+                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                    />
+
+                    <input
+                        type="text"
+                        placeholder="Description"
+                        className="w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-transparent px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                    />
+                </div>
+
+                <button
+                    onClick={submit}
+                    disabled={loading}
+                    className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-medium py-2.5 transition"
+                >
+                    {loading ? "Adding..." : "Add Expense"}
+                </button>
+            </div>
+        </section>
     );
 }

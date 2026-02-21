@@ -1,70 +1,66 @@
-import { useState } from "react"
-import { loginUser } from "../firebase/auth"
-import { useNavigate, Link } from "react-router-dom"
-import { motion } from "framer-motion"
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [error, setError] = useState("")
-    const navigate = useNavigate()
+    const { login, signup } = useAuth();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [isSignup, setIsSignup] = useState(false);
+    const [error, setError] = useState("");
 
-    const handleLogin = async (e) => {
-        e.preventDefault()
-        setError("")
+    const submit = async () => {
         try {
-            await loginUser(email, password)
-            navigate("/")
+            setError("");
+            isSignup
+                ? await signup(email, password)
+                : await login(email, password);
         } catch (err) {
-            setError("Invalid credentials")
+            setError(err.message);
         }
-    }
+    };
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4">
-            <motion.form
-                onSubmit={handleLogin}
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6"
-            >
-                <h2 className="text-2xl font-bold text-center mb-6">
-                    Welcome Back 👋
+        <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="card p-6 rounded w-full max-w-sm space-y-4">
+                <h2 className="text-xl font-bold text-center">
+                    {isSignup ? "Create Account" : "Login"}
                 </h2>
 
                 {error && (
-                    <p className="text-red-500 text-sm mb-3 text-center">{error}</p>
+                    <p className="text-sm text-red-500 text-center">{error}</p>
                 )}
 
                 <input
-                    type="email"
+                    className="w-full p-2 border rounded bg-transparent"
                     placeholder="Email"
-                    className="w-full mb-4 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required
                 />
 
                 <input
                     type="password"
+                    className="w-full p-2 border rounded bg-transparent"
                     placeholder="Password"
-                    className="w-full mb-4 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
                 />
 
-                <button className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition">
-                    Login
+                <button
+                    onClick={submit}
+                    className="w-full py-2 rounded"
+                >
+                    {isSignup ? "Sign Up" : "Login"}
                 </button>
 
-                <p className="text-sm text-center mt-4">
-                    Don’t have an account?{" "}
-                    <Link to="/register" className="text-blue-600 font-medium">
-                        Register
-                    </Link>
+                <p
+                    className="text-sm text-center cursor-pointer text-(--muted)"
+                    onClick={() => setIsSignup(!isSignup)}
+                >
+                    {isSignup
+                        ? "Already have an account? Login"
+                        : "New user? Create account"}
                 </p>
-            </motion.form>
+            </div>
         </div>
-    )
+    );
 }

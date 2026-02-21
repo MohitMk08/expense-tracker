@@ -3,34 +3,23 @@ import {
     collection,
     query,
     where,
+    onSnapshot,
     orderBy,
     getDocs,
     deleteDoc,
     doc,
     serverTimestamp,
 } from "firebase/firestore"
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { db, storage } from "./firebaseConfig"
+import { db } from "./firebaseConfig"
 
 const expenseRef = collection(db, "expenses")
 
-export const addExpense = async ({ uid, amount, description, image }) => {
-    let imageUrl = ""
-
-    if (image) {
-        const imageRef = ref(
-            storage,
-            `expenses/${uid}/${Date.now()}-${image.name}`
-        )
-        await uploadBytes(imageRef, image)
-        imageUrl = await getDownloadURL(imageRef)
-    }
-
+export const addExpense = async ({ uid, amount, description, imageBase64 }) => {
     return addDoc(expenseRef, {
         uid,
         amount: Number(amount),
         description,
-        imageUrl,
+        imageBase64: imageBase64 || null,
         createdAt: serverTimestamp(),
     })
 }
@@ -47,6 +36,25 @@ export const getUserExpenses = async (uid) => {
         ...doc.data(),
     }))
 }
+
+/**
+ * 🔥 REAL-TIME LISTENER
+ */
+export const subscribeToUserExpenses = (uid, callback) => {
+    const q = query(
+        expenseRef,
+        where("uid", "==", uid),
+        orderBy("createdAt", "desc")
+    );
+
+    return onSnapshot(q, (snapshot) => {
+        const expenses = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+        callback(expenses);
+    });
+};
 
 export const deleteExpense = (id) =>
     deleteDoc(doc(db, "expenses", id))

@@ -1,26 +1,35 @@
+import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { subscribeToUserExpenses } from "../firebase/expenseService";
 import ExpenseCard from "./ExpenseCard";
 
-export default function ExpenseList({ expenses, setExpenses }) {
-    const deleteExpense = (id) => {
-        setExpenses(prev => prev.filter(e => e.id !== id));
-    };
+const ExpenseList = () => {
+    const { user } = useAuth();
+    const [expenses, setExpenses] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    if (!expenses.length)
-        return (
-            <p className="text-center text-(--muted)">
-                No expenses yet
-            </p>
-        );
+    useEffect(() => {
+        if (!user) return;
+
+        const unsubscribe = subscribeToUserExpenses(user.uid, (data) => {
+            setExpenses(data);
+            setLoading(false);
+        });
+
+        return () => unsubscribe(); // cleanup
+    }, [user]);
+
+    if (loading) return <p>Loading expenses...</p>;
 
     return (
         <div className="space-y-3">
-            {expenses.map(expense => (
-                <ExpenseCard
-                    key={expense.id}
-                    expense={expense}
-                    onDelete={deleteExpense}
-                />
+            {expenses.length === 0 && <p>No expenses yet</p>}
+
+            {expenses.map((expense) => (
+                <ExpenseCard key={expense.id} expense={expense} />
             ))}
         </div>
     );
-}
+};
+
+export default ExpenseList;

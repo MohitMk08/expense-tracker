@@ -2,13 +2,20 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
-} from "firebase/auth"
-import { auth } from "./firebaseConfig"
+} from "firebase/auth";
+import { auth } from "./firebaseConfig";
 
-export const registerUser = (email, password) =>
-    createUserWithEmailAndPassword(auth, email, password)
+// SIGN UP
+export function registerUser(email, password) {
+    return createUserWithEmailAndPassword(auth, email, password);
+}
 
-export const loginUser = (email, password) =>
-    signInWithEmailAndPassword(auth, email, password)
+// LOGIN
+export function loginUser(email, password) {
+    return signInWithEmailAndPassword(auth, email, password);
+}
 
-export const logoutUser = () => signOut(auth)
+// LOGOUT
+export function logoutUser() {
+    return signOut(auth);
+}

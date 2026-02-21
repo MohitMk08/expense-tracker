@@ -48,7 +48,7 @@ export default function Dashboard() {
                 </h1>
 
                 <div className="flex gap-2">
-                    <ThemeToggle />
+                    {/* <ThemeToggle /> */}
                     <button
                         onClick={logoutUser}
                         className="text-sm text-red-500 hover:underline"

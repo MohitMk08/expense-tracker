@@ -32,19 +32,19 @@ body {
     border: 1px solid var(--border);
 }
 
-button {
+.btn {
     background-color: var(--primary);
     color: white;
 }
 
-/* delete button */
+/* delete button
 .delete-btn {
     color: var(--muted);
 }
 
 .delete-btn:hover {
     color: #ef4444;
-}
+} */
 
 /* expense image preview */
 .expense-img {
