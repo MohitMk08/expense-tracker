@@ -33,7 +33,17 @@ export default function Dashboard() {
         return () => unsubscribe()
     }, [user])
 
-    const total = expenses.reduce((sum, e) => sum + e.amount, 0)
+    const totalExpense = expenses
+        .filter((e) => (e.type || "expense") === "expense")
+        .reduce((sum, e) => sum + Number(e.amount), 0);
+
+    const totalCredit = expenses
+        .filter((e) => e.type === "credit")
+        .reduce((sum, e) => sum + Number(e.amount), 0);
+
+    const balance = totalCredit - totalExpense;
+
+    // const total = expenses.reduce((sum, e) => sum + e.amount, 0)
 
     if (!user) {
         return <p className="text-center mt-10">Loading user...</p>
@@ -62,6 +72,22 @@ export default function Dashboard() {
             <div className="mb-6 p-4 rounded-2xl bg-gray-200 dark:bg-gray-900 border border-gray-300 dark:border-gray-800">
                 <p className="text-sm opacity-70">Total Spent</p>
                 <h2 className="text-2xl font-bold">₹ {total}</h2>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="p-3 rounded-xl bg-red-100 dark:bg-red-900">
+                    <p className="text-xs">Expense</p>
+                    <p className="font-semibold">₹{totalExpense}</p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-green-100 dark:bg-green-900">
+                    <p className="text-xs">Credit</p>
+                    <p className="font-semibold">₹{totalCredit}</p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-indigo-100 dark:bg-indigo-900">
+                    <p className="text-xs">Balance</p>
+                    <p className="font-semibold">₹{balance}</p>
+                </div>
             </div>
 
             <AddExpense />

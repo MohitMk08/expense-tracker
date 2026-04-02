@@ -2,23 +2,48 @@ import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { MdOutlineDarkMode } from "react-icons/md";
 import { CiLight } from "react-icons/ci";
+import { useEffect } from "react";
 
 export default function Header() {
     const { dark, setDark } = useTheme();
     const { user, logout } = useAuth();
 
     return (
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center">
+            {/* 🔹 LEFT SIDE */}
             <div>
-                <h1 className="text-2xl font-bold">Expense Tracker</h1>
-                <p className="text-sm text-(--muted)">{user.email}</p>
+                <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
+                    Expense Tracker
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    {user?.email}
+                </p>
             </div>
 
-            <div className="flex gap-2">
-                <button onClick={() => setDark(!dark)} className="px-3 py-1 rounded text-2xl font-bold text-blue-500">
-                    {dark ? <CiLight /> : <MdOutlineDarkMode />}
+            {/* 🔹 RIGHT SIDE */}
+            <div className="flex items-center gap-2">
+
+                {/* 🌗 THEME TOGGLE */}
+                <button
+                    onClick={() => setDark(!dark)}
+                    className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 
+                    bg-white dark:bg-gray-800 
+                    hover:scale-105 active:scale-95 transition-all"
+                >
+                    {dark ? (
+                        <CiLight className="text-lg text-yellow-400" />
+                    ) : (
+                        <MdOutlineDarkMode className="text-lg text-gray-700" />
+                    )}
                 </button>
-                <button onClick={logout} className="px-3 py-1 rounded btn">
+
+                {/* 🚪 LOGOUT BUTTON */}
+                <button
+                    onClick={logout}
+                    className="px-3 py-2 rounded-xl text-sm font-medium 
+                    bg-red-500 text-white 
+                    hover:bg-red-600 active:scale-95 transition-all shadow-sm"
+                >
                     Logout
                 </button>
             </div>

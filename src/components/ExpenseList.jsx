@@ -1,32 +1,47 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { subscribeToUserExpenses } from "../firebase/expenseService";
 import ExpenseCard from "./ExpenseCard";
 
-const ExpenseList = () => {
-    const { user } = useAuth();
-    const [expenses, setExpenses] = useState([]);
-    const [loading, setLoading] = useState(true);
+const ExpenseList = ({ expenses = [] }) => {
 
-    useEffect(() => {
-        if (!user) return;
-
-        const unsubscribe = subscribeToUserExpenses(user.uid, (data) => {
-            setExpenses(data);
-            setLoading(false);
-        });
-
-        return () => unsubscribe(); // cleanup
-    }, [user]);
-
-    if (loading) return <p>Loading expenses...</p>;
+    // 🔹 LOADING STATE (fallback)
+    if (!expenses) {
+        return (
+            <div className="space-y-3">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Loading expenses...
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-3">
-            {expenses.length === 0 && <p>No expenses yet</p>}
 
-            {expenses.map((expense) => (
-                <ExpenseCard key={expense.id} expense={expense} />
+            {/* 🔹 EMPTY STATE */}
+            {expenses.length === 0 && (
+                <div className="text-center py-10 border border-dashed rounded-2xl 
+                    border-gray-300 dark:border-gray-700">
+
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                        No transactions yet
+                    </p>
+
+                    <p className="text-xs text-gray-400 mt-1">
+                        Start by adding your first expense 💸
+                    </p>
+                </div>
+            )}
+
+            {/* 🔹 LIST */}
+            {expenses.map((expense, index) => (
+                <div
+                    key={expense.id}
+                    className="animate-fadeIn"
+                    style={{
+                        animationDelay: `${index * 50}ms`,
+                    }}
+                >
+                    <ExpenseCard expense={expense} />
+                </div>
             ))}
         </div>
     );

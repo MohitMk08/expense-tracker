@@ -14,35 +14,32 @@ import { db } from "./firebaseConfig"
 
 const expenseRef = collection(db, "expenses")
 
-export const addExpense = async ({ uid, amount, description, imageBase64 }) => {
-    return addDoc(expenseRef, {
+export const addExpense = async ({
+    uid,
+    amount,
+    description,
+    type, // 🆕
+    imageBase64,
+    event
+}) => {
+    return addDoc(collection(db, "expenses"), {
         uid,
         amount: Number(amount),
         description,
+        type: type || "expense", // default
         imageBase64: imageBase64 || null,
+        event: event || "general", // default
         createdAt: serverTimestamp(),
-    })
-}
-
-export const getUserExpenses = async (uid) => {
-    const q = query(
-        expenseRef,
-        where("uid", "==", uid),
-        orderBy("createdAt", "desc")
-    )
-    const snapshot = await getDocs(q)
-    return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    }))
-}
+    });
+};
 
 /**
  * 🔥 REAL-TIME LISTENER
  */
+
 export const subscribeToUserExpenses = (uid, callback) => {
     const q = query(
-        expenseRef,
+        collection(db, "expenses"),
         where("uid", "==", uid),
         orderBy("createdAt", "desc")
     );
@@ -55,6 +52,7 @@ export const subscribeToUserExpenses = (uid, callback) => {
         callback(expenses);
     });
 };
+
 
 export const deleteExpense = (id) =>
     deleteDoc(doc(db, "expenses", id))
