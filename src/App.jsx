@@ -3,6 +3,7 @@ import Header from "./components/Header";
 import AddExpense from "./components/AddExpense";
 import ExpenseList from "./components/ExpenseList";
 import Summary from "./components/Summary";
+import { exportToPDF } from "./utils/exportPDF";
 import { useAuth } from "./context/AuthContext";
 import { useEffect, useState } from "react";
 import { subscribeToUserExpenses } from "./firebase/expenseService";
@@ -31,6 +32,14 @@ export default function App() {
 
   const balance = totalCredit - totalExpense;
 
+  const handleExport = () => {
+    exportToPDF(filteredExpenses, {
+      totalCredit,
+      totalExpense,
+      balance,
+    }, selectedEvent);
+  };
+
   // ✅ realtime updates
   useEffect(() => {
     if (!user) return;
@@ -48,6 +57,13 @@ export default function App() {
 
       {/* 🔹 HEADER */}
       <div className="sticky top-0 z-10 backdrop-blur bg-white/70 dark:bg-gray-900/70 border-b border-gray-200 dark:border-gray-800">
+
+        <button
+          onClick={handleExport}
+          className="w-full bg-black dark:bg-white dark:text-black text-white py-2 rounded-xl text-sm font-medium hover:opacity-90 transition"
+        >
+          Download Report 📄
+        </button>
         <div className="max-w-xl mx-auto px-4 py-3">
           <Header />
         </div>
