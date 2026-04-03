@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { addExpense } from "../firebase/expenseService";
 
 export default function AddExpense({ user, eventOptions = [] }) {
@@ -9,6 +9,17 @@ export default function AddExpense({ user, eventOptions = [] }) {
     const [imageBase64, setImageBase64] = useState(null);
 
     const fileInputRef = useRef(null);
+
+    // ✅ FIX: ensure eventOptions is ALWAYS array
+    const safeEventOptions = useMemo(() => {
+        if (!eventOptions) return [];
+
+        // if already array
+        if (Array.isArray(eventOptions)) return eventOptions;
+
+        // if object (firebase case)
+        return Object.values(eventOptions);
+    }, [eventOptions]);
 
     const handleImage = (e) => {
         const file = e.target.files[0];
@@ -29,11 +40,11 @@ export default function AddExpense({ user, eventOptions = [] }) {
         try {
             await addExpense({
                 uid: user.uid,
-                amount,
+                amount: Number(amount), // ✅ ensure number
                 description,
                 type,
                 imageBase64,
-                event,
+                event: event.trim() || "general", // ✅ CLEAN EVENT
             });
 
             // reset
@@ -123,7 +134,7 @@ export default function AddExpense({ user, eventOptions = [] }) {
                 />
             </div>
 
-            {/* 🔹 EVENT */}
+            {/* 🔹 EVENT (Dynamic + Safe) */}
             <div className="space-y-1">
                 <label className="text-xs text-gray-500 dark:text-gray-400">
                     Event
@@ -135,13 +146,14 @@ export default function AddExpense({ user, eventOptions = [] }) {
                     onChange={(e) => setEvent(e.target.value)}
                     placeholder="Type or select event"
                     className="w-full px-3 py-2 rounded-xl border 
-        border-gray-200 dark:border-gray-700
-        bg-white dark:bg-gray-800
-        text-gray-900 dark:text-white"
+                    border-gray-200 dark:border-gray-700
+                    bg-white dark:bg-gray-800
+                    text-gray-900 dark:text-white"
                 />
 
+                {/* ✅ SAFE MAP FIX */}
                 <datalist id="eventOptions">
-                    {eventOptions.map((ev, i) => (
+                    {safeEventOptions.map((ev, i) => (
                         <option key={i} value={ev} />
                     ))}
                 </datalist>
