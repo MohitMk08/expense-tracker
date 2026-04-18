@@ -1,5 +1,6 @@
 import { deleteExpense } from "../firebase/expenseService";
 import { useAuth } from "../context/AuthContext";
+import { motion } from "framer-motion";
 
 export default function ExpenseCard({ expense }) {
     const { user } = useAuth();
@@ -16,64 +17,56 @@ export default function ExpenseCard({ expense }) {
     };
 
     return (
-        <div
-            className="group rounded-2xl border border-gray-200 dark:border-gray-800 
-            bg-white dark:bg-gray-900 
-            p-4 shadow-sm 
-            hover:shadow-md hover:-translate-y-0.5 
-            transition-all duration-300"
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -2 }}
+            className="card cursor-pointer"
         >
-            {/* 🔹 TOP */}
+            {/* 🔹 TOP SECTION */}
             <div className="flex justify-between items-start gap-3">
 
-                {/* LEFT */}
-                <div className="flex-1 space-y-1">
+                {/* LEFT SIDE */}
+                <div className="flex flex-col gap-1">
 
                     {/* DESCRIPTION */}
-                    <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white leading-snug">
+                    <p className="text-sm font-medium">
                         {expense.description}
                     </p>
 
-                    {/* DATE + EVENT */}
-                    <div className="flex items-center gap-2 flex-wrap">
+                    {/* DATE */}
+                    {expense.createdAt?.seconds && (
+                        <p className="text-xs" style={{ color: "var(--muted)" }}>
+                            {new Date(
+                                expense.createdAt.seconds * 1000
+                            ).toLocaleDateString()}
+                        </p>
+                    )}
 
-                        {expense.createdAt?.seconds && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                                {new Date(
-                                    expense.createdAt.seconds * 1000
-                                ).toLocaleDateString()}
-                            </span>
-                        )}
-
-                        <span
-                            className="text-[10px] px-2 py-1 rounded-full 
-                            bg-indigo-50 text-indigo-600 
-                            dark:bg-indigo-900/40 dark:text-indigo-300"
-                        >
-                            {expense.event || "general"}
-                        </span>
-                    </div>
+                    {/* EVENT TAG */}
+                    <span className="inline-block text-[10px] px-2 py-1 rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300 w-fit">
+                        {expense.event || "general"}
+                    </span>
                 </div>
 
-                {/* RIGHT */}
-                <div className="text-right flex flex-col items-end gap-1">
+                {/* RIGHT SIDE */}
+                <div className="flex flex-col items-end gap-1">
 
                     {/* AMOUNT */}
                     <p
-                        className={`text-sm sm:text-base font-semibold ${expense.type === "credit"
+                        className={`text-base font-semibold ${expense.type === "credit"
                             ? "text-green-500"
                             : "text-red-500"
                             }`}
                     >
-                        {expense.type === "credit" ? "+" : "-"} ₹{expense.amount}
+                        {expense.type === "credit" ? "+" : "-"} ₹
+                        {expense.amount}
                     </p>
 
                     {/* DELETE */}
                     <button
                         onClick={remove}
-                        className="text-[11px] text-gray-400 hover:text-red-500 
-                        opacity-0 group-hover:opacity-100 
-                        transition"
+                        className="text-xs text-red-400 hover:text-red-600 transition"
                     >
                         Delete
                     </button>
@@ -82,15 +75,18 @@ export default function ExpenseCard({ expense }) {
 
             {/* 🔹 IMAGE */}
             {expense.imageBase64 && (
-                <div className="mt-3 overflow-hidden rounded-xl">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-3 overflow-hidden rounded-xl"
+                >
                     <img
                         src={expense.imageBase64}
                         alt="Receipt"
-                        className="h-40 w-full object-cover 
-                        transition-transform duration-300 group-hover:scale-[1.03]"
+                        className="h-40 w-full object-cover transition-transform duration-300 hover:scale-105"
                     />
-                </div>
+                </motion.div>
             )}
-        </div>
+        </motion.div>
     );
 }

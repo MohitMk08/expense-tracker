@@ -6,10 +6,10 @@ const ExpenseList = ({ expenses = [] }) => {
     if (!expenses) {
         return (
             <div className="space-y-3">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm  dark:text-gray-400" style={{ color: " var(--muted)" }}>
                     Loading expenses...
                 </p>
-            </div>
+            </div >
         );
     }
 
@@ -21,7 +21,7 @@ const ExpenseList = ({ expenses = [] }) => {
                 <div className="text-center py-10 border border-dashed rounded-2xl 
                     border-gray-300 dark:border-gray-700">
 
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    <p className=" dark:text-gray-400 text-sm">
                         No transactions yet
                     </p>
 
@@ -32,18 +32,20 @@ const ExpenseList = ({ expenses = [] }) => {
             )}
 
             {/* 🔹 LIST */}
-            {expenses.map((expense, index) => (
-                <div
-                    key={expense.id}
-                    className="animate-fadeIn"
-                    style={{
-                        animationDelay: `${index * 50}ms`,
-                    }}
-                >
-                    <ExpenseCard expense={expense} />
-                </div>
-            ))}
-        </div>
+            {
+                expenses.map((expense, index) => (
+                    <div
+                        key={expense.id}
+                        className="animate-fadeIn"
+                        style={{
+                            animationDelay: `${index * 50}ms`,
+                        }}
+                    >
+                        <ExpenseCard expense={expense} />
+                    </div>
+                ))
+            }
+        </div >
     );
 };
 

@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo } from "react";
 import { addExpense } from "../firebase/expenseService";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AddExpense({ user, eventOptions = [] }) {
     const [amount, setAmount] = useState("");
@@ -7,22 +8,18 @@ export default function AddExpense({ user, eventOptions = [] }) {
     const [type, setType] = useState("expense");
     const [event, setEvent] = useState("general");
     const [imageBase64, setImageBase64] = useState(null);
+    const [success, setSuccess] = useState(false);
 
     const fileInputRef = useRef(null);
 
-    // ✅ FIX: ensure eventOptions is ALWAYS array
     const safeEventOptions = useMemo(() => {
         if (!eventOptions) return [];
-
-        // if already array
         if (Array.isArray(eventOptions)) return eventOptions;
-
-        // if object (firebase case)
         return Object.values(eventOptions);
     }, [eventOptions]);
 
-    const handleImage = (e) => {
-        const file = e.target.files[0];
+    // 📂 Drag & Drop + File Upload
+    const handleFile = (file) => {
         if (!file) return;
 
         const reader = new FileReader();
@@ -30,6 +27,11 @@ export default function AddExpense({ user, eventOptions = [] }) {
             setImageBase64(reader.result);
         };
         reader.readAsDataURL(file);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        handleFile(e.dataTransfer.files[0]);
     };
 
     const submit = async (e) => {
@@ -40,12 +42,17 @@ export default function AddExpense({ user, eventOptions = [] }) {
         try {
             await addExpense({
                 uid: user.uid,
-                amount: Number(amount), // ✅ ensure number
+                amount: Number(amount),
                 description,
                 type,
                 imageBase64,
-                event: event.trim() || "general", // ✅ CLEAN EVENT
+                event: event.trim() || "general",
             });
+
+            // 🎉 success animation trigger
+            setSuccess(true);
+
+            setTimeout(() => setSuccess(false), 1500);
 
             // reset
             setAmount("");
@@ -54,33 +61,49 @@ export default function AddExpense({ user, eventOptions = [] }) {
             setEvent("general");
             setImageBase64(null);
 
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
+            if (fileInputRef.current) fileInputRef.current.value = "";
         } catch (error) {
-            console.error("Error adding expense:", error);
+            console.error(error);
         }
     };
 
     return (
-        <form
+        <motion.form
             onSubmit={submit}
-            className="bg-white dark:bg-gray-900 p-5 rounded-2xl 
-            border border-gray-200 dark:border-gray-800 
-            shadow-sm space-y-5 transition-all"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card space-y-5 relative overflow-hidden"
         >
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Add Transaction
-            </h2>
+            <h2 className="text-lg font-semibold">Add Transaction</h2>
 
-            {/* 🔹 TYPE TOGGLE */}
-            <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+            {/* 🎉 SUCCESS ANIMATION */}
+            <AnimatePresence>
+                {success && (
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-black/70 backdrop-blur rounded-2xl z-10"
+                    >
+                        <motion.div
+                            initial={{ y: 10 }}
+                            animate={{ y: 0 }}
+                            className="text-green-500 text-xl font-semibold"
+                        >
+                            ✅ Added!
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* TYPE */}
+            <div className="flex rounded-xl overflow-hidden border">
                 <button
                     type="button"
                     onClick={() => setType("expense")}
-                    className={`flex-1 py-2 text-sm font-medium transition-all ${type === "expense"
+                    className={`flex-1 py-2 transition ${type === "expense"
                         ? "bg-red-500 text-white"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+                        : "bg-gray-100 dark:bg-gray-800"
                         }`}
                 >
                     Expense
@@ -89,54 +112,44 @@ export default function AddExpense({ user, eventOptions = [] }) {
                 <button
                     type="button"
                     onClick={() => setType("credit")}
-                    className={`flex-1 py-2 text-sm font-medium transition-all ${type === "credit"
+                    className={`flex-1 py-2 transition ${type === "credit"
                         ? "bg-green-500 text-white"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+                        : "bg-gray-100 dark:bg-gray-800"
                         }`}
                 >
                     Credit
                 </button>
             </div>
 
-            {/* 🔹 AMOUNT */}
-            <div className="space-y-1">
-                <label className="text-xs text-gray-500 dark:text-gray-400">
+            {/* AMOUNT */}
+            <div>
+                <label style={{ color: "var(--muted)" }} className="text-xs">
                     Amount
                 </label>
                 <input
                     type="number"
-                    placeholder="Enter amount"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border 
-                    border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800
-                    text-gray-900 dark:text-white
-                    focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                    className="input mt-1"
                 />
             </div>
 
-            {/* 🔹 DESCRIPTION */}
-            <div className="space-y-1">
-                <label className="text-xs text-gray-500 dark:text-gray-400">
+            {/* DESCRIPTION */}
+            <div>
+                <label style={{ color: "var(--muted)" }} className="text-xs">
                     Description
                 </label>
                 <input
                     type="text"
-                    placeholder="Enter description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border 
-                    border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800
-                    text-gray-900 dark:text-white
-                    focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                    className="input mt-1"
                 />
             </div>
 
-            {/* 🔹 EVENT (Dynamic + Safe) */}
-            <div className="space-y-1">
-                <label className="text-xs text-gray-500 dark:text-gray-400">
+            {/* EVENT */}
+            <div>
+                <label style={{ color: "var(--muted)" }} className="text-xs">
                     Event
                 </label>
 
@@ -144,14 +157,9 @@ export default function AddExpense({ user, eventOptions = [] }) {
                     list="eventOptions"
                     value={event}
                     onChange={(e) => setEvent(e.target.value)}
-                    placeholder="Type or select event"
-                    className="w-full px-3 py-2 rounded-xl border 
-                    border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800
-                    text-gray-900 dark:text-white"
+                    className="input mt-1"
                 />
 
-                {/* ✅ SAFE MAP FIX */}
                 <datalist id="eventOptions">
                     {safeEventOptions.map((ev, i) => (
                         <option key={i} value={ev} />
@@ -159,40 +167,43 @@ export default function AddExpense({ user, eventOptions = [] }) {
                 </datalist>
             </div>
 
-            {/* 🔹 FILE UPLOAD */}
-            <div className="space-y-2">
-                <label className="text-xs text-gray-500 dark:text-gray-400">
-                    Upload Receipt (optional)
-                </label>
+            {/* 📂 DRAG DROP FILE UPLOAD */}
+            <div
+                onDrop={handleDrop}
+                onDragOver={(e) => e.preventDefault()}
+                className="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer hover:border-indigo-500 transition"
+                onClick={() => fileInputRef.current.click()}
+            >
+                <p className="text-sm text-gray-500">
+                    Drag & drop receipt or click to upload
+                </p>
 
                 <input
                     type="file"
                     ref={fileInputRef}
-                    onChange={handleImage}
-                    className="w-full text-sm file:mr-3 file:py-2 file:px-3 
-                    file:rounded-lg file:border-0 
-                    file:bg-indigo-50 file:text-indigo-600
-                    hover:file:bg-indigo-100"
+                    hidden
+                    onChange={(e) => handleFile(e.target.files[0])}
                 />
-
-                {imageBase64 && (
-                    <img
-                        src={imageBase64}
-                        alt="preview"
-                        className="w-full h-40 object-cover rounded-xl border border-gray-200 dark:border-gray-700"
-                    />
-                )}
             </div>
 
-            {/* 🔹 SUBMIT */}
-            <button
+            {/* IMAGE PREVIEW */}
+            {imageBase64 && (
+                <motion.img
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    src={imageBase64}
+                    className="w-full h-40 object-cover rounded-xl"
+                />
+            )}
+
+            {/* SUBMIT */}
+            <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="btn btn-primary w-full"
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 
-                text-white py-3 rounded-xl font-medium 
-                transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-sm"
             >
                 Add Entry
-            </button>
-        </form>
+            </motion.button>
+        </motion.form>
     );
 }

@@ -47,7 +47,7 @@ export default function Login() {
 
                 <button
                     onClick={submit}
-                    className="w-full py-2 rounded"
+                    className="w-full py-2 rounded transition-all duration-200 active:scale-95"
                 >
                     {isSignup ? "Sign Up" : "Login"}
                 </button>

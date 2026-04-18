@@ -61,7 +61,7 @@ export default function Dashboard() {
                     {/* <ThemeToggle /> */}
                     <button
                         onClick={logoutUser}
-                        className="text-sm text-red-500 hover:underline"
+                        className="text-sm text-red-500 hover:underline transition-all duration-200 active:scale-95"
                     >
                         Logout
                     </button>

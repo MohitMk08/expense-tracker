@@ -75,59 +75,65 @@ export default function App() {
   if (!user) return <Login />;
 
   return (
-    <div
-      className="min-h-screen transition-colors duration-300 
-      bg-linear-to-br from-gray-50 via-white to-gray-100 
-      dark:from-gray-900 dark:via-gray-950 dark:to-gray-900"
-    >
-      {/* 🔹 HEADER */}
-      <div className="sticky top-0 z-10 backdrop-blur bg-white/70 dark:bg-gray-900/70 border-b border-gray-200 dark:border-gray-800">
 
+    <div className="min-h-screen relative overflow-hidden">
 
-
-        <div className="max-w-xl mx-auto px-4 py-3">
-          <Header />
-          <button
-            onClick={handleExport}
-            className="w-full bg-black dark:bg-white dark:text-black text-white py-2 rounded-xl text-sm font-medium hover:opacity-90 transition"
-          >
-            Download Report 📄
-          </button>
-        </div>
+      {/* 🌈 BACKGROUND GRADIENT BLOBS */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-[-100px] left-[-100px] w-72 h-72 bg-indigo-500 opacity-20 blur-3xl rounded-full"></div>
+        <div className="absolute bottom-[-120px] right-[-100px] w-72 h-72 bg-pink-500 opacity-20 blur-3xl rounded-full"></div>
       </div>
 
-      {/* 🔹 MAIN */}
-      <div className="max-w-xl mx-auto px-4 py-5 space-y-5">
+      <div className="max-w-xl mx-auto px-4 py-5 space-y-6">
+        {/* 🔹 HEADER */}
+        <div className="sticky top-0 z-10 backdrop-blur bg-white/70 dark:bg-gray-900/70 border-b border-gray-200 dark:border-gray-800">
 
-        {/* 🔹 EVENT TABS */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {eventTabs.map((ev, i) => (
+
+
+          <div className="max-w-xl mx-auto px-4 py-3">
+            <Header />
             <button
-              key={i}
-              onClick={() => setSelectedEvent(ev)}
-              className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition
-              ${selectedEvent === ev
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-                }`}
+              onClick={handleExport}
+              className="w-full bg-black dark:bg-white dark:text-black text-white py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-all duration-200 active:scale-95"
             >
-              {ev}
+              Download Report 📄
             </button>
-          ))}
+          </div>
         </div>
 
-        {/* 🔹 SUMMARY */}
-        <Summary
-          totalExpense={totalExpense}
-          totalCredit={totalCredit}
-          balance={balance}
-        />
+        {/* 🔹 MAIN */}
+        <div className="max-w-xl mx-auto px-4 py-5 space-y-5">
 
-        {/* 🔹 ADD EXPENSE */}
-        <AddExpense user={user} eventOptions={eventOptions} />
+          {/* 🔹 EVENT TABS */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {eventTabs.map((ev, i) => (
+              <button
+                key={i}
+                onClick={() => setSelectedEvent(ev)}
+                className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition-all duration-200 active:scale-95
+              ${selectedEvent === ev
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  }`}
+              >
+                {ev}
+              </button>
+            ))}
+          </div>
 
-        {/* 🔹 EXPENSE LIST */}
-        <ExpenseList expenses={filteredExpenses} />
+          {/* 🔹 SUMMARY */}
+          <Summary
+            totalExpense={totalExpense}
+            totalCredit={totalCredit}
+            balance={balance}
+          />
+
+          {/* 🔹 ADD EXPENSE */}
+          <AddExpense user={user} eventOptions={eventOptions} />
+
+          {/* 🔹 EXPENSE LIST */}
+          <ExpenseList expenses={filteredExpenses} />
+        </div>
       </div>
     </div>
   );
