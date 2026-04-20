@@ -1,4 +1,5 @@
 import ExpenseCard from "./ExpenseCard";
+import Loader from "./Loader";
 
 const ExpenseList = ({ expenses = [] }) => {
 
@@ -7,7 +8,7 @@ const ExpenseList = ({ expenses = [] }) => {
         return (
             <div className="space-y-3">
                 <p className="text-sm  dark:text-gray-400" style={{ color: " var(--muted)" }}>
-                    Loading expenses...
+                    <Loader />;
                 </p>
             </div >
         );

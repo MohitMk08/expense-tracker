@@ -3,6 +3,9 @@ import Header from "./components/Header";
 import AddExpense from "./components/AddExpense";
 import ExpenseList from "./components/ExpenseList";
 import Summary from "./components/Summary";
+import Insights from "./components/Insights";
+import ExpenseChart from "./components/ExpenseChart";
+import Loader from "./components/Loader";
 import { exportToPDF } from "./utils/exportPDF";
 import { useAuth } from "./context/AuthContext";
 import { useEffect, useState, useMemo } from "react";
@@ -12,13 +15,19 @@ export default function App() {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState("all"); // ✅ FIXED default
+  const [appLoading, setAppLoading] = useState(true);
 
   // ✅ REALTIME FETCH (SAFE)
   useEffect(() => {
     if (!user) return;
 
     const unsubscribe = subscribeToUserExpenses(user.uid, (data) => {
-      setExpenses(data || []);
+      setExpenses(data);
+
+      // ⏳ force minimum loader time (3 sec)
+      setTimeout(() => {
+        setAppLoading(false);
+      }, 3000);
     });
 
     return () => unsubscribe();
@@ -74,14 +83,22 @@ export default function App() {
 
   if (!user) return <Login />;
 
+  if (appLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader />
+      </div>
+    );
+  }
+
   return (
 
     <div className="min-h-screen relative overflow-hidden">
 
       {/* 🌈 BACKGROUND GRADIENT BLOBS */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-[-100px] left-[-100px] w-72 h-72 bg-indigo-500 opacity-20 blur-3xl rounded-full"></div>
-        <div className="absolute bottom-[-120px] right-[-100px] w-72 h-72 bg-pink-500 opacity-20 blur-3xl rounded-full"></div>
+        <div className="absolute top-25 left-25 w-72 h-72 bg-indigo-500 opacity-20 blur-3xl rounded-full"></div>
+        <div className="absolute bottom-30 right-25 w-72 h-72 bg-pink-500 opacity-20 blur-3xl rounded-full"></div>
       </div>
 
       <div className="max-w-xl mx-auto px-4 py-5 space-y-6">
@@ -127,6 +144,11 @@ export default function App() {
             totalCredit={totalCredit}
             balance={balance}
           />
+          {/* AI Insights */}
+          <Insights expenses={filteredExpenses} />
+
+          {/* Expense charts */}
+          <ExpenseChart expenses={filteredExpenses} />
 
           {/* 🔹 ADD EXPENSE */}
           <AddExpense user={user} eventOptions={eventOptions} />
