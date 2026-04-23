@@ -111,7 +111,9 @@ export default function App() {
             <Header />
             <button
               onClick={handleExport}
-              className="w-full bg-black dark:bg-white dark:text-black text-white py-2 rounded-xl text-sm font-medium hover:opacity-90 transition-all duration-200 active:scale-95"
+              className="w-full py-2 rounded-xl text-sm font-medium
+bg-indigo-600 text-white hover:bg-indigo-700
+dark:bg-indigo-500 dark:hover:bg-indigo-600 hover:opacity-90 transition-all duration-200 active:scale-95"
             >
               Download Report 📄
             </button>

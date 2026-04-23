@@ -49,9 +49,12 @@ export default function Insights({ expenses }) {
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="card space-y-3"
+            className="rounded-2xl p-4 border 
+bg-white dark:bg-gray-900 
+border-gray-200 dark:border-gray-800 
+shadow-sm space-y-3"
         >
-            <h3 className="text-sm font-semibold">🧠 Smart Insights</h3>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">🧠 Smart Insights</h3>
 
             {insights.length === 0 && (
                 <p style={{ color: "var(--muted)" }} className="text-sm">
@@ -64,7 +67,9 @@ export default function Insights({ expenses }) {
                     key={i}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="text-sm p-2 rounded-lg bg-gray-100 dark:bg-gray-800"
+                    className="text-sm p-2 rounded-lg 
+bg-gray-100 dark:bg-gray-800 
+text-gray-800 dark:text-gray-200"
                 >
                     {text}
                 </motion.div>

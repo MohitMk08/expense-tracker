@@ -101,9 +101,10 @@ export default function AddExpense({ user, eventOptions = [] }) {
                 <button
                     type="button"
                     onClick={() => setType("expense")}
-                    className={`flex-1 py-2 transition ${type === "expense"
-                        ? "bg-red-500 text-white"
-                        : "bg-gray-100 dark:bg-gray-800"
+                    className={`flex-1 py-2 text-sm font-medium transition-all
+${type === "expense"
+                            ? "bg-red-500 text-white"
+                            : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                         }`}
                 >
                     Expense
@@ -112,9 +113,10 @@ export default function AddExpense({ user, eventOptions = [] }) {
                 <button
                     type="button"
                     onClick={() => setType("credit")}
-                    className={`flex-1 py-2 transition ${type === "credit"
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-100 dark:bg-gray-800"
+                    className={`flex-1 py-2 text-sm font-medium transition-all
+${type === "credit"
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                         }`}
                 >
                     Credit
