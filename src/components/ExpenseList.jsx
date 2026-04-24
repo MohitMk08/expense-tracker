@@ -8,7 +8,7 @@ const ExpenseList = ({ expenses = [] }) => {
         return (
             <div className="space-y-3">
                 <p className="text-sm  dark:text-gray-400" style={{ color: " var(--muted)" }}>
-                    <Loader />;
+                    <Loader />
                 </p>
             </div >
         );

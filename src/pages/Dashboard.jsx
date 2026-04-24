@@ -6,6 +6,7 @@ import AddExpense from "../components/AddExpense";
 import ExpenseCard from "../components/ExpenseCard";
 import { logoutUser } from "../firebase/auth";
 import { Card, Button } from "../ui";
+const { formatCurrency } = useCurrency();
 
 export default function Dashboard() {
     const { user } = useContext(AuthContext);
@@ -57,7 +58,7 @@ export default function Dashboard() {
         <div className="min-h-screen px-4 py-6 max-w-3xl mx-auto">
 
             {/* HEADER */}
-            <div className="flex justify-between items-center mb-6">
+            {/* <div className="flex justify-between items-center mb-6">
                 <h1
                     className="text-xl md:text-2xl font-bold"
                     style={{ color: "var(--text)" }}
@@ -68,10 +69,10 @@ export default function Dashboard() {
                 <Button variant="danger" onClick={logoutUser}>
                     Logout
                 </Button>
-            </div>
+            </div> */}
 
             {/* TOTAL CARD */}
-            <Card>
+            {/* <Card>
                 <p
                     className="text-sm"
                     style={{ color: "var(--text-muted)" }}
@@ -83,42 +84,42 @@ export default function Dashboard() {
                     className="text-2xl font-bold mt-1"
                     style={{ color: "var(--text)" }}
                 >
-                    ₹ {total}
+                    formatCurrency {total}
                 </h2>
-            </Card>
+            </Card> */}
 
             {/* SUMMARY GRID */}
-            <div className="grid grid-cols-3 gap-3 mt-4">
+            {/* <div className="grid grid-cols-3 gap-3 mt-4">
 
                 <Card>
                     <p style={{ color: "var(--text-muted)" }}>Expense</p>
                     <p style={{ color: "var(--danger)" }}>
-                        ₹{totalExpense}
+                        formatCurrency{totalExpense}
                     </p>
                 </Card>
 
                 <Card>
                     <p style={{ color: "var(--text-muted)" }}>Credit</p>
                     <p style={{ color: "var(--success)" }}>
-                        ₹{totalCredit}
+                        formatCurrency{totalCredit}
                     </p>
                 </Card>
 
                 <Card>
                     <p style={{ color: "var(--text-muted)" }}>Balance</p>
                     <p style={{ color: "var(--primary)" }}>
-                        ₹{balance}
+                        formatCurrency{balance}
                     </p>
                 </Card>
-            </div>
+            </div> */}
 
             {/* ADD EXPENSE */}
-            <div className="mt-6">
+            {/* <div className="mt-6">
                 <AddExpense user={user} />
-            </div>
+            </div> */}
 
             {/* LIST */}
-            <div className="mt-6">
+            {/* <div className="mt-6">
                 {loading ? (
                     <p
                         className="text-center"
@@ -139,7 +140,7 @@ export default function Dashboard() {
                         ))}
                     </div>
                 )}
-            </div>
+            </div> */}
         </div>
     );
 }

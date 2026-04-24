@@ -1,39 +1,70 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import html2canvas from "html2canvas";
 
-export const exportToPDF = (expenses, summary, selectedEvent) => {
+export const exportToPDF = async (
+    expenses,
+    summary,
+    selectedEvent,
+    formatCurrency,
+    user // ✅ pass user for branding
+) => {
     const doc = new jsPDF();
 
     const { totalCredit, totalExpense, balance } = summary;
 
-    // 🎯 HEADER
-    doc.setFontSize(18);
+    // 🎯 1. HEADER (BRANDING)
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
     doc.setTextColor(40, 40, 40);
-    doc.text("Expense Report", 14, 20);
+    doc.text("Expense Tracker", 14, 18);
 
     doc.setFontSize(11);
-    doc.setTextColor(100);
-    doc.text(`Event: ${selectedEvent}`, 14, 28);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 34);
+    doc.setTextColor(120);
+    doc.text("Smart Financial Report", 14, 25);
 
-    // 🎯 SUMMARY BOX
-    const startY = 45;
+    // USER INFO
+    doc.setFontSize(10);
+    doc.text(`User: ${user?.email || "N/A"}`, 14, 32);
+    doc.text(`Event: ${selectedEvent}`, 14, 38);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 44);
 
-    doc.setFillColor(240, 240, 240);
-    doc.roundedRect(14, startY, 180, 25, 3, 3, "F");
+    // 🎯 2. SUMMARY CARD
+    const startY = 55;
+
+    doc.setFillColor(245, 247, 250);
+    doc.roundedRect(14, startY, 180, 30, 4, 4, "F");
 
     doc.setFontSize(11);
 
-    doc.setTextColor(0, 150, 0);
-    doc.text(`Credit: Rs.${totalCredit}`, 18, startY + 10);
+    doc.setTextColor(34, 197, 94);
+    doc.text(`Credit: ${formatCurrency(totalCredit)}`, 18, startY + 12);
 
-    doc.setTextColor(200, 0, 0);
-    doc.text(`Expense: Rs.${totalExpense}`, 18, startY + 18);
+    doc.setTextColor(239, 68, 68);
+    doc.text(`Expense: ${formatCurrency(totalExpense)}`, 18, startY + 22);
 
-    doc.setTextColor(0, 0, 150);
-    doc.text(`Balance: Rs.${balance}`, 110, startY + 14);
+    doc.setTextColor(99, 102, 241);
+    doc.text(`Balance: ${formatCurrency(balance)}`, 110, startY + 17);
 
-    // 🎯 TABLE DATA
+    // 🎯 3. CAPTURE CHART
+    let chartY = startY + 40;
+
+    const chartElement = document.getElementById("chart-export");
+
+    if (chartElement) {
+        const canvas = await html2canvas(chartElement, {
+            backgroundColor: null,
+            scale: 2,
+        });
+
+        const imgData = canvas.toDataURL("image/png");
+
+        doc.addImage(imgData, "PNG", 14, chartY, 180, 80);
+
+        chartY += 90;
+    }
+
+    // 🎯 4. TABLE DATA
     const tableData = expenses.map((e) => [
         new Date(
             e.createdAt?.seconds
@@ -42,12 +73,14 @@ export const exportToPDF = (expenses, summary, selectedEvent) => {
         ).toLocaleDateString(),
         e.description,
         e.event || "general",
-        e.type === "credit" ? `+Rs.${e.amount}` : `-Rs.${e.amount}`,
+        e.type === "credit"
+            ? `+ ${formatCurrency(e.amount)}`
+            : `- ${formatCurrency(e.amount)}`,
     ]);
 
-    // 🎯 TABLE
+    // 🎯 5. TABLE
     autoTable(doc, {
-        startY: startY + 35,
+        startY: chartY,
         head: [["Date", "Description", "Event", "Amount"]],
         body: tableData,
 
@@ -57,22 +90,27 @@ export const exportToPDF = (expenses, summary, selectedEvent) => {
         },
 
         headStyles: {
-            fillColor: [63, 81, 181], // Indigo
+            fillColor: [99, 102, 241],
             textColor: 255,
+            fontStyle: "bold",
+        },
+
+        alternateRowStyles: {
+            fillColor: [248, 250, 252],
         },
 
         didParseCell: function (data) {
             if (data.column.index === 3) {
                 if (data.cell.raw.includes("+")) {
-                    data.cell.styles.textColor = [0, 150, 0];
+                    data.cell.styles.textColor = [34, 197, 94];
                 } else {
-                    data.cell.styles.textColor = [200, 0, 0];
+                    data.cell.styles.textColor = [239, 68, 68];
                 }
             }
         },
     });
 
-    // 🎯 FOOTER
+    // 🎯 6. FOOTER
     const pageHeight = doc.internal.pageSize.height;
 
     doc.setFontSize(9);

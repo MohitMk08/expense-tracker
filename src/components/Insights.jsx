@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
+import { useCurrency } from "../context/CurrencyContext";
 
 export default function Insights({ expenses }) {
     if (!expenses || expenses.length === 0) return null;
+
+    const { formatCurrency } = useCurrency();
 
     const totalExpense = expenses
         .filter((e) => (e.type || "expense") === "expense")
@@ -12,6 +15,7 @@ export default function Insights({ expenses }) {
         .reduce((sum, e) => sum + Number(e.amount), 0);
 
     const balance = totalCredit - totalExpense;
+
 
     // 🔥 CATEGORY ANALYSIS
     const categoryMap = {};
@@ -47,7 +51,7 @@ export default function Insights({ expenses }) {
 
     if (totalExpense > 10000) {
         insights.push({
-            text: "High spending detected",
+            text: `💸 High spending detected: ${formatCurrency(totalExpense)}`,
             color: "var(--warning)"
         });
     }

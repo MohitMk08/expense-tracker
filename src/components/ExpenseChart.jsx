@@ -5,6 +5,7 @@ import {
     ResponsiveContainer
 } from "recharts";
 import { Card } from "../ui";
+import { useCurrency } from "../context/CurrencyContext";
 
 const COLORS = [
     "var(--primary)",
@@ -16,9 +17,10 @@ const COLORS = [
 ];
 
 export default function ExpenseChart({ expenses }) {
+    const { formatCurrency } = useCurrency();
+
     if (!expenses || expenses.length === 0) return null;
 
-    // ✅ group by event
     const map = {};
 
     expenses.forEach((e) => {
@@ -40,7 +42,6 @@ export default function ExpenseChart({ expenses }) {
         );
     }
 
-    // ✅ attach color inside data (NO Cell)
     const data = Object.keys(map).map((key, index) => ({
         name: key,
         value: map[key],
@@ -52,7 +53,6 @@ export default function ExpenseChart({ expenses }) {
     return (
         <Card className="space-y-4">
 
-            {/* HEADER */}
             <h3
                 className="text-sm font-semibold"
                 style={{ color: "var(--text)" }}
@@ -60,8 +60,7 @@ export default function ExpenseChart({ expenses }) {
                 📊 Expense Breakdown
             </h3>
 
-            {/* CHART */}
-            <div className="w-full h-65 relative">
+            <div id="chart-export" className="w-full h-65 relative">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
@@ -73,9 +72,8 @@ export default function ExpenseChart({ expenses }) {
                             paddingAngle={3}
                         />
 
-                        {/* ✅ THEME AWARE TOOLTIP */}
                         <Tooltip
-                            formatter={(value) => `₹ ${value}`}
+                            formatter={(value) => formatCurrency(value)}
                             contentStyle={{
                                 background: "var(--card)",
                                 borderRadius: "12px",
@@ -87,7 +85,7 @@ export default function ExpenseChart({ expenses }) {
                     </PieChart>
                 </ResponsiveContainer>
 
-                {/* CENTER LABEL */}
+                {/* CENTER */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                     <p
                         className="text-xs"
@@ -99,7 +97,7 @@ export default function ExpenseChart({ expenses }) {
                         className="text-xl font-bold"
                         style={{ color: "var(--text)" }}
                     >
-                        ₹{total}
+                        {formatCurrency(total)}
                     </p>
                 </div>
             </div>
@@ -132,7 +130,7 @@ export default function ExpenseChart({ expenses }) {
                             className="text-sm font-semibold"
                             style={{ color: "var(--text-muted)" }}
                         >
-                            ₹{item.value}
+                            {formatCurrency(item.value)}
                         </span>
                     </div>
                 ))}

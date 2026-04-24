@@ -3,12 +3,16 @@ import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Card, Badge, Button } from "../ui";
+import { useCurrency } from "../context/CurrencyContext";
 
 export default function ExpenseCard({ expense }) {
     const { user } = useAuth();
     const [showImage, setShowImage] = useState(false);
+    const { formatCurrency } = useCurrency();
 
     if (!expense) return null;
+
+    const isCredit = expense.type === "credit";
 
     const remove = async () => {
         if (expense.uid !== user?.uid) return;
@@ -19,11 +23,8 @@ export default function ExpenseCard({ expense }) {
         await deleteExpense(expense.id);
     };
 
-    const isCredit = expense.type === "credit";
-
     return (
         <>
-            {/* 🔹 CARD */}
             <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -42,13 +43,11 @@ export default function ExpenseCard({ expense }) {
                         }}
                     />
 
-                    {/* 🔹 CONTENT */}
                     <div className="flex justify-between items-start gap-4">
 
                         {/* LEFT */}
                         <div className="flex flex-col gap-1">
 
-                            {/* DESCRIPTION */}
                             <p
                                 className="text-sm font-semibold tracking-tight"
                                 style={{ color: "var(--text)" }}
@@ -56,7 +55,6 @@ export default function ExpenseCard({ expense }) {
                                 {expense.description}
                             </p>
 
-                            {/* DATE */}
                             {expense.createdAt?.seconds && (
                                 <p
                                     className="text-xs"
@@ -68,7 +66,6 @@ export default function ExpenseCard({ expense }) {
                                 </p>
                             )}
 
-                            {/* EVENT */}
                             <Badge>
                                 {expense.event || "general"}
                             </Badge>
@@ -77,7 +74,6 @@ export default function ExpenseCard({ expense }) {
                         {/* RIGHT */}
                         <div className="flex flex-col items-end gap-2">
 
-                            {/* 💰 TYPE + AMOUNT */}
                             <div className="flex items-center gap-2">
 
                                 <span
@@ -102,11 +98,11 @@ export default function ExpenseCard({ expense }) {
                                             : "var(--danger)",
                                     }}
                                 >
-                                    {isCredit ? "+" : "-"} ₹{expense.amount}
+                                    {isCredit ? "+" : "-"}{" "}
+                                    {formatCurrency(expense.amount)}
                                 </p>
                             </div>
 
-                            {/* DELETE */}
                             <Button
                                 variant="ghost"
                                 className="text-xs opacity-0 group-hover:opacity-100 transition"
@@ -133,13 +129,9 @@ export default function ExpenseCard({ expense }) {
                                 className="h-44 w-full object-cover transition duration-300 group-hover:scale-105"
                             />
 
-                            {/* 🔍 OVERLAY */}
                             <div
                                 className="absolute inset-0 flex items-center justify-center transition"
-                                style={{
-                                    background:
-                                        "rgba(0,0,0,0)",
-                                }}
+                                style={{ background: "rgba(0,0,0,0)" }}
                                 onMouseEnter={(e) =>
                                 (e.currentTarget.style.background =
                                     "rgba(0,0,0,0.35)")

@@ -10,12 +10,16 @@ import { exportToPDF } from "./utils/exportPDF";
 import { useAuth } from "./context/AuthContext";
 import { useEffect, useState, useMemo } from "react";
 import { subscribeToUserExpenses } from "./firebase/expenseService";
+import { useCurrency } from "./context/CurrencyContext";
+
+
 
 export default function App() {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState("all");
   const [appLoading, setAppLoading] = useState(true);
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     if (!user) return;
@@ -70,7 +74,9 @@ export default function App() {
         totalExpense,
         balance,
       },
-      selectedEvent
+      selectedEvent,
+      formatCurrency,
+      user
     );
   };
 
