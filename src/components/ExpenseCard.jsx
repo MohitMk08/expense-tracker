@@ -1,9 +1,12 @@
 import { deleteExpense } from "../firebase/expenseService";
 import { useAuth } from "../context/AuthContext";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { Card, Badge, Button } from "../ui";
 
 export default function ExpenseCard({ expense }) {
     const { user } = useAuth();
+    const [showImage, setShowImage] = useState(false);
 
     if (!expense) return null;
 
@@ -16,77 +19,168 @@ export default function ExpenseCard({ expense }) {
         await deleteExpense(expense.id);
     };
 
+    const isCredit = expense.type === "credit";
+
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ y: -2 }}
-            className="card cursor-pointer"
-        >
-            {/* 🔹 TOP SECTION */}
-            <div className="flex justify-between items-start gap-3">
+        <>
+            {/* 🔹 CARD */}
+            <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -3 }}
+                transition={{ duration: 0.2 }}
+            >
+                <Card className="relative overflow-hidden group transition-all">
 
-                {/* LEFT SIDE */}
-                <div className="flex flex-col gap-1">
-
-                    {/* DESCRIPTION */}
-                    <p className="text-sm font-medium">
-                        {expense.description}
-                    </p>
-
-                    {/* DATE */}
-                    {expense.createdAt?.seconds && (
-                        <p className="text-xs" style={{ color: "var(--muted)" }}>
-                            {new Date(
-                                expense.createdAt.seconds * 1000
-                            ).toLocaleDateString()}
-                        </p>
-                    )}
-
-                    {/* EVENT TAG */}
-                    <span className="inline-block text-[10px] px-2 py-1 rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300 w-fit">
-                        {expense.event || "general"}
-                    </span>
-                </div>
-
-                {/* RIGHT SIDE */}
-                <div className="flex flex-col items-end gap-1">
-
-                    {/* AMOUNT */}
-                    <p
-                        className={`text-base font-semibold ${expense.type === "credit"
-                            ? "text-green-500"
-                            : "text-red-500"
-                            }`}
-                    >
-                        {expense.type === "credit" ? "+" : "-"} ₹
-                        {expense.amount}
-                    </p>
-
-                    {/* DELETE */}
-                    <button
-                        onClick={remove}
-                        className="text-xs text-red-400 hover:text-red-600 transition"
-                    >
-                        Delete
-                    </button>
-                </div>
-            </div>
-
-            {/* 🔹 IMAGE */}
-            {expense.imageBase64 && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-3 overflow-hidden rounded-xl"
-                >
-                    <img
-                        src={expense.imageBase64}
-                        alt="Receipt"
-                        className="h-40 w-full object-cover transition-transform duration-300 hover:scale-105"
+                    {/* 🎨 LEFT ACCENT BAR */}
+                    <div
+                        className="absolute left-0 top-0 h-full w-1"
+                        style={{
+                            background: isCredit
+                                ? "var(--success)"
+                                : "var(--danger)",
+                        }}
                     />
-                </motion.div>
-            )}
-        </motion.div>
+
+                    {/* 🔹 CONTENT */}
+                    <div className="flex justify-between items-start gap-4">
+
+                        {/* LEFT */}
+                        <div className="flex flex-col gap-1">
+
+                            {/* DESCRIPTION */}
+                            <p
+                                className="text-sm font-semibold tracking-tight"
+                                style={{ color: "var(--text)" }}
+                            >
+                                {expense.description}
+                            </p>
+
+                            {/* DATE */}
+                            {expense.createdAt?.seconds && (
+                                <p
+                                    className="text-xs"
+                                    style={{ color: "var(--text-muted)" }}
+                                >
+                                    {new Date(
+                                        expense.createdAt.seconds * 1000
+                                    ).toLocaleDateString()}
+                                </p>
+                            )}
+
+                            {/* EVENT */}
+                            <Badge>
+                                {expense.event || "general"}
+                            </Badge>
+                        </div>
+
+                        {/* RIGHT */}
+                        <div className="flex flex-col items-end gap-2">
+
+                            {/* 💰 TYPE + AMOUNT */}
+                            <div className="flex items-center gap-2">
+
+                                <span
+                                    className="text-xs px-2 py-0.5 rounded-full"
+                                    style={{
+                                        background: isCredit
+                                            ? "rgba(34,197,94,0.12)"
+                                            : "rgba(239,68,68,0.12)",
+                                        color: isCredit
+                                            ? "var(--success)"
+                                            : "var(--danger)",
+                                    }}
+                                >
+                                    {isCredit ? "Credit" : "Expense"}
+                                </span>
+
+                                <p
+                                    className="text-base font-bold"
+                                    style={{
+                                        color: isCredit
+                                            ? "var(--success)"
+                                            : "var(--danger)",
+                                    }}
+                                >
+                                    {isCredit ? "+" : "-"} ₹{expense.amount}
+                                </p>
+                            </div>
+
+                            {/* DELETE */}
+                            <Button
+                                variant="ghost"
+                                className="text-xs opacity-0 group-hover:opacity-100 transition"
+                                onClick={remove}
+                                style={{ color: "var(--danger)" }}
+                            >
+                                Delete
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* 🖼 IMAGE */}
+                    {expense.imageBase64 && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="mt-4 overflow-hidden rounded-xl cursor-zoom-in relative border"
+                            style={{ borderColor: "var(--border)" }}
+                            onClick={() => setShowImage(true)}
+                        >
+                            <img
+                                src={expense.imageBase64}
+                                alt="Receipt"
+                                className="h-44 w-full object-cover transition duration-300 group-hover:scale-105"
+                            />
+
+                            {/* 🔍 OVERLAY */}
+                            <div
+                                className="absolute inset-0 flex items-center justify-center transition"
+                                style={{
+                                    background:
+                                        "rgba(0,0,0,0)",
+                                }}
+                                onMouseEnter={(e) =>
+                                (e.currentTarget.style.background =
+                                    "rgba(0,0,0,0.35)")
+                                }
+                                onMouseLeave={(e) =>
+                                (e.currentTarget.style.background =
+                                    "rgba(0,0,0,0)")
+                                }
+                            >
+                                <span className="text-white text-sm opacity-0 group-hover:opacity-100 transition">
+                                    View
+                                </span>
+                            </div>
+                        </motion.div>
+                    )}
+                </Card>
+            </motion.div>
+
+            {/* 🔥 FULLSCREEN IMAGE */}
+            <AnimatePresence>
+                {showImage && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md"
+                        style={{ background: "rgba(0,0,0,0.8)" }}
+                        onClick={() => setShowImage(false)}
+                    >
+                        <motion.img
+                            initial={{ scale: 0.85 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0.85 }}
+                            src={expense.imageBase64}
+                            alt="Full Receipt"
+                            className="max-h-[90vh] max-w-[90vw] rounded-2xl"
+                            style={{ boxShadow: "var(--shadow-md)" }}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
     );
 }

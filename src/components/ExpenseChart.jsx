@@ -1,15 +1,15 @@
 import {
     PieChart,
     Pie,
-    Cell,
     Tooltip,
     ResponsiveContainer
 } from "recharts";
+import { Card } from "../ui";
 
 const COLORS = [
-    "#6366f1",
-    "#22c55e",
-    "#ef4444",
+    "var(--primary)",
+    "var(--success)",
+    "var(--danger)",
     "#f59e0b",
     "#3b82f6",
     "#a855f7"
@@ -18,14 +18,13 @@ const COLORS = [
 export default function ExpenseChart({ expenses }) {
     if (!expenses || expenses.length === 0) return null;
 
-    // group by event/category
+    // ✅ group by event
     const map = {};
 
     expenses.forEach((e) => {
-        // ❗ ONLY EXPENSE
         if ((e.type || "expense") !== "expense") return;
 
-        const key = e.event || "general";
+        const key = (e.event || "general").trim();
 
         if (!map[key]) map[key] = 0;
         map[key] += Number(e.amount);
@@ -33,45 +32,111 @@ export default function ExpenseChart({ expenses }) {
 
     if (Object.keys(map).length === 0) {
         return (
-            <div className="card text-center text-sm text-gray-500">
-                No expense data for chart
-            </div>
+            <Card className="text-center text-sm">
+                <p style={{ color: "var(--text-muted)" }}>
+                    No expense data for chart
+                </p>
+            </Card>
         );
     }
 
-    const data = Object.keys(map).map((key) => ({
+    // ✅ attach color inside data (NO Cell)
+    const data = Object.keys(map).map((key, index) => ({
         name: key,
-        value: map[key]
+        value: map[key],
+        fill: COLORS[index % COLORS.length],
     }));
 
+    const total = data.reduce((sum, d) => sum + d.value, 0);
+
     return (
-        <div className="card">
-            <h3 className="text-sm font-semibold mb-3">
-                📊 Expense Distribution
+        <Card className="space-y-4">
+
+            {/* HEADER */}
+            <h3
+                className="text-sm font-semibold"
+                style={{ color: "var(--text)" }}
+            >
+                📊 Expense Breakdown
             </h3>
 
-            <div className="w-full h-64">
-                <ResponsiveContainer>
+            {/* CHART */}
+            <div className="w-full h-65 relative">
+                <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
                             data={data}
                             dataKey="value"
                             nameKey="name"
-                            outerRadius={90}
-                            label
-                        >
-                            {data.map((_, index) => (
-                                <Cell
-                                    key={index}
-                                    fill={COLORS[index % COLORS.length]}
-                                />
-                            ))}
-                        </Pie>
+                            outerRadius={100}
+                            innerRadius={60}
+                            paddingAngle={3}
+                        />
 
-                        <Tooltip />
+                        {/* ✅ THEME AWARE TOOLTIP */}
+                        <Tooltip
+                            formatter={(value) => `₹ ${value}`}
+                            contentStyle={{
+                                background: "var(--card)",
+                                borderRadius: "12px",
+                                border: "1px solid var(--border)",
+                                color: "var(--text)",
+                                boxShadow: "var(--shadow)",
+                            }}
+                        />
                     </PieChart>
                 </ResponsiveContainer>
+
+                {/* CENTER LABEL */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <p
+                        className="text-xs"
+                        style={{ color: "var(--text-muted)" }}
+                    >
+                        Total
+                    </p>
+                    <p
+                        className="text-xl font-bold"
+                        style={{ color: "var(--text)" }}
+                    >
+                        ₹{total}
+                    </p>
+                </div>
             </div>
-        </div>
+
+            {/* LEGEND */}
+            <div className="space-y-2">
+                {data.map((item, index) => (
+                    <div
+                        key={index}
+                        className="flex items-center justify-between px-3 py-2 rounded-xl transition"
+                        style={{
+                            background: "var(--card-soft)",
+                            border: "1px solid var(--border)"
+                        }}
+                    >
+                        <div className="flex items-center gap-3">
+                            <span
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: item.fill }}
+                            />
+                            <span
+                                className="text-sm font-medium"
+                                style={{ color: "var(--text)" }}
+                            >
+                                {item.name}
+                            </span>
+                        </div>
+
+                        <span
+                            className="text-sm font-semibold"
+                            style={{ color: "var(--text-muted)" }}
+                        >
+                            ₹{item.value}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </Card>
     );
 }

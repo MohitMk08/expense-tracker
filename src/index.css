@@ -1,86 +1,8 @@
 @import "tailwindcss";
-
-/* 🌞 LIGHT MODE */
-:root {
-    --bg: #f8fafc;
-    --card: #ffffff;
-    --text: #0f172a;
-    --muted: #475569;
-    --border: #e2e8f0;
-
-    --primary: #6366f1;
-    --danger: #ef4444;
-    --success: #22c55e;
-}
-
-.dark {
-    --bg: #020617;
-    --card: #0f172a;
-    --text: #e2e8f0;
-    --muted: #94a3b8;
-    --border: #1e293b;
-}
+@import "./styles/theme.css";
 
 body {
     background: var(--bg);
     color: var(--text);
-}
-
-/* 🎯 GLOBAL CONTAINERS */
-.container {
-    max-width: 640px;
-    margin: auto;
-    padding: 16px;
-}
-
-.card {
-    background: var(--card);
-    border-radius: 16px;
-    padding: 16px;
-    border: 1px solid var(--border);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
     transition: all 0.25s ease;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-}
-
-/* 🎯 BUTTON SYSTEM */
-.btn {
-    padding: 10px 14px;
-    border-radius: 12px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white;
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-}
-
-.btn-primary:hover {
-    transform: translateY(-1px) scale(1.02);
-}
-
-.btn-danger {
-    background: #ef4444;
-    color: white;
-}
-
-/* 🎯 INPUT */
-.input {
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    background: white;
-}
-
-.dark .input {
-    background: #020617;
-    border: 1px solid #1e293b;
-    color: white;
 }

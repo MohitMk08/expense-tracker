@@ -1,47 +1,75 @@
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
-import { MdOutlineDarkMode } from "react-icons/md";
-import { CiLight } from "react-icons/ci";
-import { useEffect } from "react";
 
 export default function Header() {
     const { dark, setDark } = useTheme();
     const { user, logout } = useAuth();
 
     return (
+        <div className="flex justify-between items-center">
 
-        <div className="flex justify-between items-center mb-4 
-text-gray-900 dark:text-gray-100">
-
+            {/* LEFT */}
             <div>
-                <h1 className="text-2xl font-bold bg-linear-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+                <h1
+                    className="text-2xl font-bold bg-clip-text text-transparent"
+                    style={{
+                        backgroundImage:
+                            "linear-gradient(to right, var(--primary), #a855f7)",
+                    }}
+                >
                     Expense Tracker
                 </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+
+                <p
+                    className="text-sm mt-1"
+                    style={{ color: "var(--text-muted)" }}
+                >
                     {user.email}
                 </p>
             </div>
 
+            {/* RIGHT */}
             <div className="flex items-center gap-2">
+
+                {/* 🌙 THEME TOGGLE */}
                 <button
                     onClick={() => setDark(!dark)}
-                    className="p-2 rounded-lg 
-bg-gray-200 dark:bg-gray-800 
-text-gray-800 dark:text-gray-200 
-hover:scale-105 transition"
+                    className="p-2 rounded-lg transition-all duration-200 active:scale-95"
+                    style={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        boxShadow: "var(--shadow-sm)",
+                        color: "var(--text)",
+                    }}
+                    onMouseOver={(e) =>
+                        (e.currentTarget.style.background = "var(--card-soft)")
+                    }
+                    onMouseOut={(e) =>
+                        (e.currentTarget.style.background = "var(--card)")
+                    }
                 >
                     {dark ? "☀️" : "🌙"}
                 </button>
 
+                {/* 🚪 LOGOUT */}
                 <button
                     onClick={logout}
-                    className="px-3 py-1 rounded-lg 
-bg-red-500 text-white 
-hover:bg-red-600 transition"
+                    className="px-3 py-1 rounded-lg text-sm font-medium transition-all duration-200 active:scale-95"
+                    style={{
+                        background: "var(--danger)",
+                        color: "#fff",
+                        boxShadow: "var(--shadow-sm)",
+                    }}
+                    onMouseOver={(e) =>
+                        (e.currentTarget.style.opacity = "0.9")
+                    }
+                    onMouseOut={(e) =>
+                        (e.currentTarget.style.opacity = "1")
+                    }
                 >
                     Logout
                 </button>
             </div>
-        </div >
+        </div>
     );
 }

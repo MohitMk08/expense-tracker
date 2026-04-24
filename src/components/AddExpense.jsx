@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from "react";
 import { addExpense } from "../firebase/expenseService";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button, Card, Input, Toggle } from "../ui";
 
 export default function AddExpense({ user, eventOptions = [] }) {
     const [amount, setAmount] = useState("");
@@ -9,6 +10,7 @@ export default function AddExpense({ user, eventOptions = [] }) {
     const [event, setEvent] = useState("general");
     const [imageBase64, setImageBase64] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [dragActive, setDragActive] = useState(false);
 
     const fileInputRef = useRef(null);
 
@@ -18,7 +20,6 @@ export default function AddExpense({ user, eventOptions = [] }) {
         return Object.values(eventOptions);
     }, [eventOptions]);
 
-    // 📂 Drag & Drop + File Upload
     const handleFile = (file) => {
         if (!file) return;
 
@@ -31,12 +32,12 @@ export default function AddExpense({ user, eventOptions = [] }) {
 
     const handleDrop = (e) => {
         e.preventDefault();
+        setDragActive(false);
         handleFile(e.dataTransfer.files[0]);
     };
 
     const submit = async (e) => {
         e.preventDefault();
-
         if (!amount || !description) return;
 
         try {
@@ -49,12 +50,9 @@ export default function AddExpense({ user, eventOptions = [] }) {
                 event: event.trim() || "general",
             });
 
-            // 🎉 success animation trigger
             setSuccess(true);
-
             setTimeout(() => setSuccess(false), 1500);
 
-            // reset
             setAmount("");
             setDescription("");
             setType("expense");
@@ -72,140 +70,170 @@ export default function AddExpense({ user, eventOptions = [] }) {
             onSubmit={submit}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="card space-y-5 relative overflow-hidden"
+            className="relative"
         >
-            <h2 className="text-lg font-semibold">Add Transaction</h2>
+            <Card className="space-y-6 overflow-hidden">
 
-            {/* 🎉 SUCCESS ANIMATION */}
-            <AnimatePresence>
-                {success && (
-                    <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.8, opacity: 0 }}
-                        className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-black/70 backdrop-blur rounded-2xl z-10"
+                {/* HEADER */}
+                <div className="flex items-center justify-between">
+                    <h2
+                        className="text-lg font-semibold"
+                        style={{ color: "var(--text)" }}
                     >
+                        Add Transaction
+                    </h2>
+
+                    <span
+                        className="text-xs px-2 py-1 rounded-full capitalize"
+                        style={{
+                            background:
+                                type === "credit"
+                                    ? "rgba(34,197,94,0.12)"
+                                    : "rgba(239,68,68,0.12)",
+                            color:
+                                type === "credit"
+                                    ? "var(--success)"
+                                    : "var(--danger)",
+                        }}
+                    >
+                        {type}
+                    </span>
+                </div>
+
+                {/* SUCCESS OVERLAY */}
+                <AnimatePresence>
+                    {success && (
                         <motion.div
-                            initial={{ y: 10 }}
-                            animate={{ y: 0 }}
-                            className="text-green-500 text-xl font-semibold"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 flex items-center justify-center backdrop-blur-md z-20 rounded-2xl"
+                            style={{ background: "rgba(0,0,0,0.15)" }}
                         >
-                            ✅ Added!
+                            <motion.div
+                                initial={{ scale: 0.85 }}
+                                animate={{ scale: 1 }}
+                                className="px-6 py-3 rounded-xl font-medium"
+                                style={{
+                                    background: "var(--card)",
+                                    boxShadow: "var(--shadow-md)",
+                                    color: "var(--text)",
+                                }}
+                            >
+                                ✅ Entry Added
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* TOGGLE */}
+                <Toggle value={type} onChange={setType} />
+
+                {/* INPUTS */}
+                <div className="grid gap-4">
+
+                    <Input
+                        label="Amount"
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                    />
+
+                    <Input
+                        label="Description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                    />
+
+                    {/* EVENT */}
+                    <div className="space-y-1">
+                        <label
+                            className="text-xs"
+                            style={{ color: "var(--text-muted)" }}
+                        >
+                            Event
+                        </label>
+
+                        <input
+                            list="eventOptions"
+                            value={event}
+                            onChange={(e) => setEvent(e.target.value)}
+                            placeholder="e.g. Trip, Marriage, Shopping"
+                            className="w-full px-3 py-2 rounded-xl outline-none transition"
+                            style={{
+                                background: "var(--card)",
+                                border: "1px solid var(--border)",
+                                color: "var(--text)",
+                            }}
+                            onFocus={(e) =>
+                            (e.target.style.border =
+                                "1px solid var(--primary)")
+                            }
+                            onBlur={(e) =>
+                            (e.target.style.border =
+                                "1px solid var(--border)")
+                            }
+                        />
+
+                        <datalist id="eventOptions">
+                            {safeEventOptions.map((ev, i) => (
+                                <option key={i} value={ev} />
+                            ))}
+                        </datalist>
+                    </div>
+                </div>
+
+                {/* DRAG & DROP */}
+                <div
+                    onDrop={handleDrop}
+                    onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragActive(true);
+                    }}
+                    onDragLeave={() => setDragActive(false)}
+                    onClick={() => fileInputRef.current.click()}
+                    className="rounded-xl p-6 text-center cursor-pointer transition-all"
+                    style={{
+                        border: `2px dashed ${dragActive ? "var(--primary)" : "var(--border)"
+                            }`,
+                        background: dragActive
+                            ? "rgba(99,102,241,0.08)"
+                            : "var(--card-soft)",
+                    }}
+                >
+                    <p
+                        className="text-sm"
+                        style={{ color: "var(--text-muted)" }}
+                    >
+                        Drag & drop receipt or click to upload
+                    </p>
+
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        hidden
+                        onChange={(e) => handleFile(e.target.files[0])}
+                    />
+                </div>
+
+                {/* IMAGE PREVIEW */}
+                {imageBase64 && (
+                    <motion.img
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        src={imageBase64}
+                        className="w-full h-44 object-cover rounded-xl"
+                        style={{
+                            border: "1px solid var(--border)",
+                        }}
+                    />
                 )}
-            </AnimatePresence>
 
-            {/* TYPE */}
-            <div className="flex rounded-xl overflow-hidden border">
-                <button
-                    type="button"
-                    onClick={() => setType("expense")}
-                    className={`flex-1 py-2 text-sm font-medium transition-all
-${type === "expense"
-                            ? "bg-red-500 text-white"
-                            : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-                        }`}
-                >
-                    Expense
-                </button>
-
-                <button
-                    type="button"
-                    onClick={() => setType("credit")}
-                    className={`flex-1 py-2 text-sm font-medium transition-all
-${type === "credit"
-                            ? "bg-green-500 text-white"
-                            : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-                        }`}
-                >
-                    Credit
-                </button>
-            </div>
-
-            {/* AMOUNT */}
-            <div>
-                <label style={{ color: "var(--muted)" }} className="text-xs">
-                    Amount
-                </label>
-                <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="input mt-1"
-                />
-            </div>
-
-            {/* DESCRIPTION */}
-            <div>
-                <label style={{ color: "var(--muted)" }} className="text-xs">
-                    Description
-                </label>
-                <input
-                    type="text"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="input mt-1"
-                />
-            </div>
-
-            {/* EVENT */}
-            <div>
-                <label style={{ color: "var(--muted)" }} className="text-xs">
-                    Event
-                </label>
-
-                <input
-                    list="eventOptions"
-                    value={event}
-                    onChange={(e) => setEvent(e.target.value)}
-                    className="input mt-1"
-                />
-
-                <datalist id="eventOptions">
-                    {safeEventOptions.map((ev, i) => (
-                        <option key={i} value={ev} />
-                    ))}
-                </datalist>
-            </div>
-
-            {/* 📂 DRAG DROP FILE UPLOAD */}
-            <div
-                onDrop={handleDrop}
-                onDragOver={(e) => e.preventDefault()}
-                className="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer hover:border-indigo-500 transition"
-                onClick={() => fileInputRef.current.click()}
-            >
-                <p className="text-sm text-gray-500">
-                    Drag & drop receipt or click to upload
-                </p>
-
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    hidden
-                    onChange={(e) => handleFile(e.target.files[0])}
-                />
-            </div>
-
-            {/* IMAGE PREVIEW */}
-            {imageBase64 && (
-                <motion.img
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    src={imageBase64}
-                    className="w-full h-40 object-cover rounded-xl"
-                />
-            )}
-
-            {/* SUBMIT */}
-            <motion.button
-                whileTap={{ scale: 0.95 }}
-                className="btn btn-primary w-full"
-                type="submit"
-            >
-                Add Entry
-            </motion.button>
+                {/* SUBMIT */}
+                <Button type="submit" className="w-full">
+                    Add Entry
+                </Button>
+            </Card>
         </motion.form>
     );
 }

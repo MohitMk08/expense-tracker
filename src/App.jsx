@@ -14,17 +14,15 @@ import { subscribeToUserExpenses } from "./firebase/expenseService";
 export default function App() {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState("all"); // ✅ FIXED default
+  const [selectedEvent, setSelectedEvent] = useState("all");
   const [appLoading, setAppLoading] = useState(true);
 
-  // ✅ REALTIME FETCH (SAFE)
   useEffect(() => {
     if (!user) return;
 
     const unsubscribe = subscribeToUserExpenses(user.uid, (data) => {
       setExpenses(data);
 
-      // ⏳ force minimum loader time (3 sec)
       setTimeout(() => {
         setAppLoading(false);
       }, 3000);
@@ -33,7 +31,6 @@ export default function App() {
     return () => unsubscribe();
   }, [user]);
 
-  // ✅ FIX: DEFINE eventOptions (this was missing ❌)
   const eventOptions = useMemo(() => {
     return [
       ...new Set(
@@ -44,12 +41,10 @@ export default function App() {
     ];
   }, [expenses]);
 
-  // ✅ EVENT TABS
   const eventTabs = useMemo(() => {
     return ["all", ...eventOptions];
   }, [eventOptions]);
 
-  // ✅ FILTER LOGIC
   const filteredExpenses =
     selectedEvent === "all"
       ? expenses
@@ -57,7 +52,6 @@ export default function App() {
         (e) => (e.event || "general") === selectedEvent
       );
 
-  // ✅ CALCULATIONS (FIXED LOGIC)
   const totalExpense = filteredExpenses
     .filter((e) => e.type === "expense")
     .reduce((sum, e) => sum + Number(e.amount), 0);
@@ -68,7 +62,6 @@ export default function App() {
 
   const balance = totalCredit - totalExpense;
 
-  // ✅ EXPORT PDF
   const handleExport = () => {
     exportToPDF(
       filteredExpenses,
@@ -85,35 +78,59 @@ export default function App() {
 
   if (appLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "var(--bg)", color: "var(--text)" }}
+      >
         <Loader />
       </div>
     );
   }
 
   return (
+    <div
+      className="min-h-screen relative overflow-hidden transition-all duration-300"
+      style={{ background: "var(--bg)", color: "var(--text)" }}
+    >
 
-    <div className="min-h-screen relative overflow-hidden">
-
-      {/* 🌈 BACKGROUND GRADIENT BLOBS */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-25 left-25 w-72 h-72 bg-indigo-500 opacity-20 blur-3xl rounded-full"></div>
-        <div className="absolute bottom-30 right-25 w-72 h-72 bg-pink-500 opacity-20 blur-3xl rounded-full"></div>
+      {/* 🌈 PREMIUM SOFT BACKGROUND BLOBS */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div
+          className="absolute top-20 left-20 w-72 h-72 rounded-full blur-3xl opacity-20"
+          style={{ background: "var(--primary)" }}
+        />
+        <div
+          className="absolute bottom-20 right-20 w-72 h-72 rounded-full blur-3xl opacity-20"
+          style={{ background: "#ec4899" }}
+        />
       </div>
 
       <div className="max-w-xl mx-auto px-4 py-5 space-y-6">
+
         {/* 🔹 HEADER */}
-        <div className="sticky top-0 z-10 backdrop-blur bg-white/70 dark:bg-gray-900/70 border-b border-gray-200 dark:border-gray-800">
-
-
-
-          <div className="max-w-xl mx-auto px-4 py-3">
+        <div
+          className="sticky top-0 z-10 backdrop-blur-xl rounded-xl border shadow-sm"
+          style={{
+            background: "var(--card)",
+            borderColor: "var(--border)",
+          }}
+        >
+          <div className="px-4 py-3 space-y-3">
             <Header />
+
             <button
               onClick={handleExport}
-              className="w-full py-2 rounded-xl text-sm font-medium
-bg-indigo-600 text-white hover:bg-indigo-700
-dark:bg-indigo-500 dark:hover:bg-indigo-600 hover:opacity-90 transition-all duration-200 active:scale-95"
+              className="w-full py-2 rounded-xl text-sm font-medium transition-all active:scale-95"
+              style={{
+                background: "var(--primary)",
+                color: "#fff",
+              }}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.background = "var(--primary-hover)")
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.background = "var(--primary)")
+              }
             >
               Download Report 📄
             </button>
@@ -121,23 +138,30 @@ dark:bg-indigo-500 dark:hover:bg-indigo-600 hover:opacity-90 transition-all dura
         </div>
 
         {/* 🔹 MAIN */}
-        <div className="max-w-xl mx-auto px-4 py-5 space-y-5">
+        <div className="space-y-5">
 
           {/* 🔹 EVENT TABS */}
           <div className="flex gap-2 overflow-x-auto pb-2">
-            {eventTabs.map((ev, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedEvent(ev)}
-                className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition-all duration-200 active:scale-95
-              ${selectedEvent === ev
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-                  }`}
-              >
-                {ev}
-              </button>
-            ))}
+            {eventTabs.map((ev, i) => {
+              const active = selectedEvent === ev;
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelectedEvent(ev)}
+                  className="px-3 py-1 rounded-full text-sm whitespace-nowrap transition-all active:scale-95 border"
+                  style={{
+                    background: active ? "var(--primary)" : "var(--card)",
+                    color: active ? "#fff" : "var(--text)",
+                    borderColor: active
+                      ? "var(--primary)"
+                      : "var(--border)",
+                  }}
+                >
+                  {ev}
+                </button>
+              );
+            })}
           </div>
 
           {/* 🔹 SUMMARY */}
@@ -146,16 +170,17 @@ dark:bg-indigo-500 dark:hover:bg-indigo-600 hover:opacity-90 transition-all dura
             totalCredit={totalCredit}
             balance={balance}
           />
-          {/* AI Insights */}
+
+          {/* 🔹 INSIGHTS */}
           <Insights expenses={filteredExpenses} />
 
-          {/* Expense charts */}
+          {/* 🔹 CHART */}
           <ExpenseChart expenses={filteredExpenses} />
 
           {/* 🔹 ADD EXPENSE */}
           <AddExpense user={user} eventOptions={eventOptions} />
 
-          {/* 🔹 EXPENSE LIST */}
+          {/* 🔹 LIST */}
           <ExpenseList expenses={filteredExpenses} />
         </div>
       </div>

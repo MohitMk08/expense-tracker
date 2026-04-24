@@ -16,9 +16,11 @@ export default function Insights({ expenses }) {
     // 🔥 CATEGORY ANALYSIS
     const categoryMap = {};
     expenses.forEach((e) => {
-        if (!categoryMap[e.event]) categoryMap[e.event] = 0;
+        const key = e.event || "general";
+        if (!categoryMap[key]) categoryMap[key] = 0;
+
         if ((e.type || "expense") === "expense") {
-            categoryMap[e.event] += Number(e.amount);
+            categoryMap[key] += Number(e.amount);
         }
     });
 
@@ -30,50 +32,102 @@ export default function Insights({ expenses }) {
     const insights = [];
 
     if (totalExpense > totalCredit) {
-        insights.push("⚠️ You're spending more than you earn");
+        insights.push({
+            text: "You're spending more than you earn",
+            color: "var(--danger)"
+        });
     }
 
     if (balance > 0) {
-        insights.push("💰 Good job! You're saving money");
+        insights.push({
+            text: "You're saving money — great job",
+            color: "var(--success)"
+        });
     }
 
     if (totalExpense > 10000) {
-        insights.push("💸 High spending detected");
+        insights.push({
+            text: "High spending detected",
+            color: "var(--warning)"
+        });
     }
 
     if (topCategory) {
-        insights.push(`🔥 Top category: ${topCategory}`);
+        insights.push({
+            text: `Top category: ${topCategory}`,
+            color: "var(--primary)"
+        });
     }
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl p-4 border 
-bg-white dark:bg-gray-900 
-border-gray-200 dark:border-gray-800 
-shadow-sm space-y-3"
+            className="rounded-2xl p-5 space-y-4"
+            style={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                boxShadow: "var(--shadow-sm)"
+            }}
         >
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">🧠 Smart Insights</h3>
+            {/* HEADER */}
+            <div className="flex items-center justify-between">
+                <h3
+                    className="text-sm font-semibold"
+                    style={{ color: "var(--text)" }}
+                >
+                    🧠 Smart Insights
+                </h3>
 
+                <span
+                    className="text-xs px-2 py-1 rounded-full"
+                    style={{
+                        background: "rgba(99,102,241,0.1)",
+                        color: "var(--primary)"
+                    }}
+                >
+                    AI
+                </span>
+            </div>
+
+            {/* EMPTY STATE */}
             {insights.length === 0 && (
-                <p style={{ color: "var(--muted)" }} className="text-sm">
+                <p
+                    className="text-sm"
+                    style={{ color: "var(--text-muted)" }}
+                >
                     No insights yet
                 </p>
             )}
 
-            {insights.map((text, i) => (
-                <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="text-sm p-2 rounded-lg 
-bg-gray-100 dark:bg-gray-800 
-text-gray-800 dark:text-gray-200"
-                >
-                    {text}
-                </motion.div>
-            ))}
+            {/* INSIGHTS LIST */}
+            <div className="space-y-2">
+                {insights.map((item, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="p-3 rounded-xl flex items-center justify-between"
+                        style={{
+                            background: "var(--card-soft)",
+                            border: "1px solid var(--border)"
+                        }}
+                    >
+                        <span
+                            className="text-sm"
+                            style={{ color: "var(--text)" }}
+                        >
+                            {item.text}
+                        </span>
+
+                        <span
+                            className="w-2 h-2 rounded-full"
+                            style={{ background: item.color }}
+                        />
+                    </motion.div>
+                ))}
+            </div>
         </motion.div>
     );
 }
