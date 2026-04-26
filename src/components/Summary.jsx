@@ -1,13 +1,12 @@
 import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
 
-
 export default function Summary({ totalExpense, totalCredit, balance }) {
     const { user } = useAuth();
     const { formatCurrency } = useCurrency();
 
     return (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
 
             <SummaryCard
                 label="Expense"
@@ -19,21 +18,19 @@ export default function Summary({ totalExpense, totalCredit, balance }) {
                 label="Credit"
                 value={formatCurrency(totalCredit)}
                 color="var(--success)"
-
             />
 
             <SummaryCard
                 label="Balance"
                 value={formatCurrency(balance)}
                 color="var(--primary)"
-
             />
 
         </div>
     );
 }
 
-function SummaryCard({ label, value, color, currency }) {
+function SummaryCard({ label, value, color }) {
     return (
         <div
             className="p-4 rounded-xl border transition-all duration-200"
@@ -51,7 +48,7 @@ function SummaryCard({ label, value, color, currency }) {
             </p>
 
             <p
-                className="text-lg font-semibold"
+                className="text-base sm:text-lg font-semibold wrap-break-words"
                 style={{ color }}
             >
                 {value}

@@ -1,70 +1,102 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import html2canvas from "html2canvas";
 
-export const exportToPDF = async (
+// 🌍 Currency mapping
+const currencyMap = {
+    "₹": "INR",
+    "$": "USD",
+    "€": "EUR",
+};
+
+// 💰 Formatter (FIXED)
+const formatCurrency = (amount, symbol = "₹") => {
+    return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: currencyMap[symbol] || "INR",
+    }).format(amount);
+};
+
+export const exportToPDF = (
     expenses,
     summary,
     selectedEvent,
-    formatCurrency,
-    user // ✅ pass user for branding
+    currency = "₹"
 ) => {
     const doc = new jsPDF();
 
     const { totalCredit, totalExpense, balance } = summary;
 
-    // 🎯 1. HEADER (BRANDING)
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.setTextColor(40, 40, 40);
-    doc.text("Expense Tracker", 14, 18);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-    doc.setFontSize(11);
-    doc.setTextColor(120);
-    doc.text("Smart Financial Report", 14, 25);
+    // 🎨 COLORS
+    const PRIMARY = [79, 70, 229];
+    const SUCCESS = [34, 197, 94];
+    const DANGER = [239, 68, 68];
 
-    // USER INFO
+    // 💧 WATERMARK
+    const addWatermark = () => {
+        const logo = new Image();
+        logo.src = "/EXP-Monochrome-logo.png";
+
+        doc.saveGraphicsState();
+        doc.setGState(new doc.GState({ opacity: 0.04 }));
+
+        doc.addImage(
+            logo,
+            "PNG",
+            pageWidth / 2 - 50,
+            pageHeight / 2 - 50,
+            100,
+            100
+        );
+
+        doc.restoreGraphicsState();
+    };
+
+    addWatermark();
+
+    // 🟣 HEADER BAR
+    doc.setFillColor(...PRIMARY);
+    doc.rect(0, 0, pageWidth, 30, "F");
+
+    // 🧾 LOGO
+    const logo = new Image();
+    logo.src = "/EXP-Logo.png";
+    doc.addImage(logo, "PNG", 14, 8, 14, 14);
+
+    // 🧾 TITLE
+    doc.setFontSize(16);
+    doc.setTextColor(255);
+    doc.text("Expense Report", 34, 18);
+
+    // 🧾 META
     doc.setFontSize(10);
-    doc.text(`User: ${user?.email || "N/A"}`, 14, 32);
-    doc.text(`Event: ${selectedEvent}`, 14, 38);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 44);
+    doc.setTextColor(230);
+    doc.text(`Event: ${selectedEvent}`, pageWidth - 60, 12);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - 60, 18);
 
-    // 🎯 2. SUMMARY CARD
-    const startY = 55;
+    // 🔲 SUMMARY CARDS
+    const startY = 40;
 
-    doc.setFillColor(245, 247, 250);
-    doc.roundedRect(14, startY, 180, 30, 4, 4, "F");
+    const drawCard = (x, label, value, color) => {
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(x, startY, 55, 25, 4, 4, "F");
 
-    doc.setFontSize(11);
+        doc.setFontSize(9);
+        doc.setTextColor(120);
+        doc.text(label, x + 5, startY + 8);
 
-    doc.setTextColor(34, 197, 94);
-    doc.text(`Credit: ${formatCurrency(totalCredit)}`, 18, startY + 12);
+        doc.setFontSize(12);
+        doc.setTextColor(...color);
+        doc.text(formatCurrency(value, currency), x + 5, startY + 18);
+    };
 
-    doc.setTextColor(239, 68, 68);
-    doc.text(`Expense: ${formatCurrency(totalExpense)}`, 18, startY + 22);
+    drawCard(14, "Credit", totalCredit, SUCCESS);
+    drawCard(74, "Expense", totalExpense, DANGER);
+    drawCard(134, "Balance", balance, PRIMARY);
 
-    doc.setTextColor(99, 102, 241);
-    doc.text(`Balance: ${formatCurrency(balance)}`, 110, startY + 17);
-
-    // 🎯 3. CAPTURE CHART
-    let chartY = startY + 40;
-
-    const chartElement = document.getElementById("chart-export");
-
-    if (chartElement) {
-        const canvas = await html2canvas(chartElement, {
-            backgroundColor: null,
-            scale: 2,
-        });
-
-        const imgData = canvas.toDataURL("image/png");
-
-        doc.addImage(imgData, "PNG", 14, chartY, 180, 80);
-
-        chartY += 90;
-    }
-
-    // 🎯 4. TABLE DATA
+    // 📊 TABLE DATA (FIXED)
     const tableData = expenses.map((e) => [
         new Date(
             e.createdAt?.seconds
@@ -74,23 +106,23 @@ export const exportToPDF = async (
         e.description,
         e.event || "general",
         e.type === "credit"
-            ? `+ ${formatCurrency(e.amount)}`
-            : `- ${formatCurrency(e.amount)}`,
+            ? `+${formatCurrency(e.amount, currency)}`
+            : `-${formatCurrency(e.amount, currency)}`,
     ]);
 
-    // 🎯 5. TABLE
+    // 📊 TABLE
     autoTable(doc, {
-        startY: chartY,
+        startY: startY + 35,
         head: [["Date", "Description", "Event", "Amount"]],
         body: tableData,
 
         styles: {
             fontSize: 10,
-            cellPadding: 4,
+            cellPadding: 5,
         },
 
         headStyles: {
-            fillColor: [99, 102, 241],
+            fillColor: PRIMARY,
             textColor: 255,
             fontStyle: "bold",
         },
@@ -102,25 +134,30 @@ export const exportToPDF = async (
         didParseCell: function (data) {
             if (data.column.index === 3) {
                 if (data.cell.raw.includes("+")) {
-                    data.cell.styles.textColor = [34, 197, 94];
+                    data.cell.styles.textColor = SUCCESS;
                 } else {
-                    data.cell.styles.textColor = [239, 68, 68];
+                    data.cell.styles.textColor = DANGER;
                 }
             }
         },
     });
 
-    // 🎯 6. FOOTER
-    const pageHeight = doc.internal.pageSize.height;
+    // 💧 WATERMARK ALL PAGES
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        addWatermark();
+    }
 
+    // 🧾 FOOTER
     doc.setFontSize(9);
     doc.setTextColor(150);
     doc.text(
-        `Generated on ${new Date().toLocaleString()}`,
+        "Generated by Expense Tracker • Smart Finance App",
         14,
         pageHeight - 10
     );
 
-    // 🎯 SAVE
+    // 💾 SAVE
     doc.save(`Expense_Report_${selectedEvent}.pdf`);
 };

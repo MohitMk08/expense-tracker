@@ -24,18 +24,18 @@ export default function Header() {
     };
 
     return (
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 
             {/* LEFT */}
-            <div>
-                <h1 className="text-2xl font-bold 
+            <div className="min-w-0 text-center md:text-left">
+                <h1 className="text-xl sm:text-2xl font-bold 
                 bg-linear-to-r from-indigo-500 to-purple-500 
-                bg-clip-text text-transparent">
+                bg-clip-text text-transparent truncate">
                     Expense Tracker
                 </h1>
 
                 <p
-                    className="text-sm"
+                    className="text-xs sm:text-sm truncate"
                     style={{ color: "var(--text-muted)" }}
                 >
                     {user.email}
@@ -43,22 +43,16 @@ export default function Header() {
             </div>
 
             {/* RIGHT */}
-            <div className="flex items-center gap-2 relative">
+            <div className="flex items-center justify-between md:justify-end gap-2 flex-wrap">
 
-                {/* 💱 CURRENCY DROPDOWN */}
-                <div className="relative">
+                {/* 💱 CURRENCY */}
+                <div className="relative w-full sm:w-auto">
                     <select
                         value={currency}
                         onChange={(e) => setCurrency(e.target.value)}
-                        className="appearance-none px-3 py-2 pr-8 rounded-xl text-sm font-medium
-                transition-all duration-200 cursor-pointer
-
-                border
-                backdrop-blur-md
-
-                focus:outline-none focus:ring-2
-
-                "
+                        className="w-full sm:w-auto appearance-none px-3 py-2 pr-8 rounded-xl text-sm font-medium
+                        transition-all duration-200 cursor-pointer border backdrop-blur-md 
+                        focus:outline-none focus:ring-2"
                         style={{
                             background: "var(--card)",
                             color: "var(--text)",
@@ -73,7 +67,7 @@ export default function Header() {
                         ))}
                     </select>
 
-                    {/* 🔽 Custom Arrow */}
+                    {/* 🔽 ARROW */}
                     <div
                         className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs"
                         style={{ color: "var(--text-muted)" }}
@@ -82,7 +76,7 @@ export default function Header() {
                     </div>
                 </div>
 
-                {/* 🌗 THEME TOGGLE */}
+                {/* 🌗 THEME */}
                 <button
                     onClick={() => setDark(!dark)}
                     className="p-2 rounded-lg transition"
@@ -98,7 +92,7 @@ export default function Header() {
                 {/* 🚪 LOGOUT */}
                 <button
                     onClick={logout}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium transition"
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap"
                     style={{
                         background: "var(--danger)",
                         color: "white",
