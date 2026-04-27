@@ -27,37 +27,29 @@ export default function Header() {
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 
             {/* LEFT */}
-            <div className="min-w-0 text-center md:text-left">
-                <h1 className="text-xl sm:text-2xl font-bold 
-                bg-linear-to-r from-indigo-500 to-purple-500 
-                bg-clip-text text-transparent truncate">
+            <div className="text-center md:text-left">
+                <h1 className="text-2xl font-bold bg-linear-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
                     Expense Tracker
                 </h1>
 
-                <p
-                    className="text-xs sm:text-sm truncate"
-                    style={{ color: "var(--text-muted)" }}
-                >
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                     {user.email}
                 </p>
             </div>
 
             {/* RIGHT */}
-            <div className="flex items-center justify-between md:justify-end gap-2 flex-wrap">
+            <div className="flex items-center justify-between gap-2 w-full md:w-auto">
 
-                {/* 💱 CURRENCY */}
-                <div className="relative w-full sm:w-auto">
+                {/* Currency */}
+                <div className="relative w-full md:w-auto">
                     <select
                         value={currency}
                         onChange={(e) => setCurrency(e.target.value)}
-                        className="w-full sm:w-auto appearance-none px-3 py-2 pr-8 rounded-xl text-sm font-medium
-                        transition-all duration-200 cursor-pointer border backdrop-blur-md 
-                        focus:outline-none focus:ring-2"
+                        className="w-full md:w-auto appearance-none px-3 py-2 pr-8 rounded-xl text-sm font-medium"
                         style={{
                             background: "var(--card)",
                             color: "var(--text)",
-                            borderColor: "var(--border)",
-                            boxShadow: "var(--shadow-sm)",
+                            border: "1px solid var(--border)",
                         }}
                     >
                         {currencies.map((c) => (
@@ -67,39 +59,35 @@ export default function Header() {
                         ))}
                     </select>
 
-                    {/* 🔽 ARROW */}
-                    <div
-                        className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs"
-                        style={{ color: "var(--text-muted)" }}
-                    >
+                    <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs">
                         ▼
                     </div>
                 </div>
 
-                {/* 🌗 THEME */}
-                <button
-                    onClick={() => setDark(!dark)}
-                    className="p-2 rounded-lg transition"
-                    style={{
-                        background: "var(--card-soft)",
-                        border: "1px solid var(--border)",
-                        color: "var(--text)",
-                    }}
-                >
-                    {dark ? "☀️" : "🌙"}
-                </button>
+                {/* Controls */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setDark(!dark)}
+                        className="p-2 rounded-lg"
+                        style={{
+                            background: "var(--card-soft)",
+                            border: "1px solid var(--border)",
+                        }}
+                    >
+                        {dark ? "☀️" : "🌙"}
+                    </button>
 
-                {/* 🚪 LOGOUT */}
-                <button
-                    onClick={logout}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap"
-                    style={{
-                        background: "var(--danger)",
-                        color: "white",
-                    }}
-                >
-                    Logout
-                </button>
+                    <button
+                        onClick={logout}
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium"
+                        style={{
+                            background: "var(--danger)",
+                            color: "white",
+                        }}
+                    >
+                        Logout
+                    </button>
+                </div>
             </div>
         </div>
     );

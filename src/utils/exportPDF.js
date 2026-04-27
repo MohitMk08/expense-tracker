@@ -1,102 +1,106 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import html2canvas from "html2canvas";
 
-// 🌍 Currency mapping
-const currencyMap = {
-    "₹": "INR",
-    "$": "USD",
-    "€": "EUR",
-};
-
-// 💰 Formatter (FIXED)
-const formatCurrency = (amount, symbol = "₹") => {
-    return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: currencyMap[symbol] || "INR",
-    }).format(amount);
-};
-
-export const exportToPDF = (
+export const exportToPDF = async (
     expenses,
     summary,
     selectedEvent,
-    currency = "₹"
+    currency = "INR", // ✅ pass string, NOT function
+    user
 ) => {
+
+    const currencySymbolMap = {
+        INR: "Rs.",
+        USD: "$",
+        EUR: "€",
+        GBP: "£",
+    };
+
+
+    const formatCurrency = (amount) => {
+        const symbol = currencySymbolMap[currency] || "₹";
+        return `${symbol} ${Number(amount).toLocaleString("en-IN")}`;
+    };
+
     const doc = new jsPDF();
 
     const { totalCredit, totalExpense, balance } = summary;
 
     const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
 
-    // 🎨 COLORS
-    const PRIMARY = [79, 70, 229];
-    const SUCCESS = [34, 197, 94];
-    const DANGER = [239, 68, 68];
+    // 🖼️ LOAD LOGO
+    const loadImage = (src) =>
+        new Promise((resolve) => {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => resolve(img);
+        });
 
-    // 💧 WATERMARK
-    const addWatermark = () => {
-        const logo = new Image();
-        logo.src = "/EXP-Monochrome-logo.png";
+    const logo = await loadImage("/EXP-Logo.png");
 
-        doc.saveGraphicsState();
-        doc.setGState(new doc.GState({ opacity: 0.04 }));
+    // 🎯 HEADER (LEFT)
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.setTextColor(40, 40, 40);
+    doc.text("Expense Tracker", 14, 18);
 
-        doc.addImage(
-            logo,
-            "PNG",
-            pageWidth / 2 - 50,
-            pageHeight / 2 - 50,
-            100,
-            100
-        );
+    doc.setFontSize(11);
+    doc.setTextColor(120);
+    doc.text("Smart Financial Report", 14, 25);
 
-        doc.restoreGraphicsState();
-    };
-
-    addWatermark();
-
-    // 🟣 HEADER BAR
-    doc.setFillColor(...PRIMARY);
-    doc.rect(0, 0, pageWidth, 30, "F");
-
-    // 🧾 LOGO
-    const logo = new Image();
-    logo.src = "/EXP-Logo.png";
-    doc.addImage(logo, "PNG", 14, 8, 14, 14);
-
-    // 🧾 TITLE
-    doc.setFontSize(16);
-    doc.setTextColor(255);
-    doc.text("Expense Report", 34, 18);
-
-    // 🧾 META
+    // 🎯 USER INFO
     doc.setFontSize(10);
-    doc.setTextColor(230);
-    doc.text(`Event: ${selectedEvent}`, pageWidth - 60, 12);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - 60, 18);
+    doc.text(`User: ${user?.email || "N/A"}`, 14, 32);
+    doc.text(`Event: ${selectedEvent}`, 14, 38);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 44);
 
-    // 🔲 SUMMARY CARDS
-    const startY = 40;
+    // 🎯 LOGO (RIGHT SIDE 🔥)
+    doc.addImage(
+        logo,
+        "PNG",
+        pageWidth - 30, // right align
+        10,
+        16,
+        16
+    );
 
-    const drawCard = (x, label, value, color) => {
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(x, startY, 55, 25, 4, 4, "F");
+    // 🎯 SUMMARY CARD
+    const startY = 55;
 
-        doc.setFontSize(9);
-        doc.setTextColor(120);
-        doc.text(label, x + 5, startY + 8);
+    doc.setFillColor(245, 247, 250);
+    doc.roundedRect(14, startY, 180, 30, 4, 4, "F");
 
-        doc.setFontSize(12);
-        doc.setTextColor(...color);
-        doc.text(formatCurrency(value, currency), x + 5, startY + 18);
-    };
+    doc.setFontSize(11);
 
-    drawCard(14, "Credit", totalCredit, SUCCESS);
-    drawCard(74, "Expense", totalExpense, DANGER);
-    drawCard(134, "Balance", balance, PRIMARY);
+    doc.setTextColor(34, 197, 94);
+    doc.text(`Credit: ${formatCurrency(totalCredit)}`, 18, startY + 12);
 
-    // 📊 TABLE DATA (FIXED)
+    doc.setTextColor(239, 68, 68);
+    doc.text(`Expense: ${formatCurrency(totalExpense)}`, 18, startY + 22);
+
+    doc.setTextColor(99, 102, 241);
+    doc.text(`Balance: ${formatCurrency(balance)}`, 110, startY + 17);
+
+    // 🎯 CHART
+    let chartY = startY + 40;
+
+    const chartElement = document.getElementById("chart-export");
+
+    if (chartElement) {
+        const canvas = await html2canvas(chartElement, {
+            backgroundColor: null,
+            scale: 2,
+        });
+
+        const imgData = canvas.toDataURL("image/png");
+
+        doc.addImage(imgData, "PNG", 50, chartY, 95, 90);
+
+        chartY += 100;
+    }
+
+    // 🎯 TABLE DATA
     const tableData = expenses.map((e) => [
         new Date(
             e.createdAt?.seconds
@@ -106,25 +110,32 @@ export const exportToPDF = (
         e.description,
         e.event || "general",
         e.type === "credit"
-            ? `+${formatCurrency(e.amount, currency)}`
-            : `-${formatCurrency(e.amount, currency)}`,
+            ? `+ ${formatCurrency(e.amount)}`
+            : `- ${formatCurrency(e.amount)}`,
     ]);
 
-    // 📊 TABLE
+    // 🎯 TABLE
     autoTable(doc, {
-        startY: startY + 35,
+        startY: chartY,
         head: [["Date", "Description", "Event", "Amount"]],
         body: tableData,
 
         styles: {
             fontSize: 10,
-            cellPadding: 5,
+            cellPadding: 4,
         },
 
         headStyles: {
-            fillColor: PRIMARY,
+            fillColor: [99, 102, 241],
             textColor: 255,
             fontStyle: "bold",
+        },
+
+        columnStyles: {
+            0: { cellWidth: 28 },  // Date
+            1: { cellWidth: 60 },  // Description
+            2: { cellWidth: 40 },  // Event
+            3: { cellWidth: 45 },  // ✅ Amount (INCREASE THIS)
         },
 
         alternateRowStyles: {
@@ -134,30 +145,25 @@ export const exportToPDF = (
         didParseCell: function (data) {
             if (data.column.index === 3) {
                 if (data.cell.raw.includes("+")) {
-                    data.cell.styles.textColor = SUCCESS;
+                    data.cell.styles.textColor = [34, 197, 94];
                 } else {
-                    data.cell.styles.textColor = DANGER;
+                    data.cell.styles.textColor = [239, 68, 68];
                 }
             }
         },
     });
 
-    // 💧 WATERMARK ALL PAGES
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        addWatermark();
-    }
+    // 🎯 FOOTER
+    const pageHeight = doc.internal.pageSize.height;
 
-    // 🧾 FOOTER
     doc.setFontSize(9);
     doc.setTextColor(150);
     doc.text(
-        "Generated by Expense Tracker • Smart Finance App",
+        `Generated on ${new Date().toLocaleString()}`,
         14,
         pageHeight - 10
     );
 
-    // 💾 SAVE
+    // 🎯 SAVE
     doc.save(`Expense_Report_${selectedEvent}.pdf`);
 };

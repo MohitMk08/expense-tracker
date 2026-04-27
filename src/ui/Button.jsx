@@ -19,7 +19,7 @@ export default function Button({ children, variant = "primary", ...props }) {
     return (
         <button
             {...props}
-            className="px-4 py-2 rounded-xl text-sm font-medium transition active:scale-95"
+            className="px-4 py-2 rounded-2xl text-sm font-medium transition active:scale-95"
             style={styles[variant]}
         >
             {children}

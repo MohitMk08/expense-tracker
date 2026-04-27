@@ -19,7 +19,8 @@ export default function App() {
   const [expenses, setExpenses] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState("all");
   const [appLoading, setAppLoading] = useState(true);
-  const { formatCurrency } = useCurrency();
+  // const { formatCurrency } = useCurrency();
+  const { currency } = useCurrency();
 
   useEffect(() => {
     if (!user) return;
@@ -75,7 +76,7 @@ export default function App() {
         balance,
       },
       selectedEvent,
-      formatCurrency,
+      currency,
       user
     );
   };

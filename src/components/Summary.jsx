@@ -6,7 +6,7 @@ export default function Summary({ totalExpense, totalCredit, balance }) {
     const { formatCurrency } = useCurrency();
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
 
             <SummaryCard
                 label="Expense"
@@ -33,7 +33,7 @@ export default function Summary({ totalExpense, totalCredit, balance }) {
 function SummaryCard({ label, value, color }) {
     return (
         <div
-            className="p-4 rounded-xl border transition-all duration-200"
+            className="min-w-30 shrink p-4 rounded-xl border transition-all duration-200 lg:w-full"
             style={{
                 background: "var(--card)",
                 borderColor: "var(--border)",
