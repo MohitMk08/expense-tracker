@@ -31,16 +31,16 @@ export default function Login() {
         }
     };
 
-    const handleGoogle = async () => {
-        try {
-            setLoading(true);
-            await googleLogin();
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // const handleGoogle = async () => {
+    //     try {
+    //         setLoading(true);
+    //         await googleLogin();
+    //     } catch (err) {
+    //         setError(err.message);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     const handleReset = async () => {
         if (!email) return setError("Enter email first");
@@ -193,7 +193,7 @@ export default function Login() {
                     </motion.button>
 
                     {/* 🔥 GOOGLE */}
-                    <button
+                    {/* <button
                         onClick={handleGoogle}
                         className="w-full py-3 rounded-xl flex items-center justify-center gap-2 transition"
                         style={{
@@ -203,7 +203,7 @@ export default function Login() {
                     >
                         <span>🔵</span>
                         Continue with Google
-                    </button>
+                    </button> */}
 
                     {/* 🔁 SWITCH */}
                     <p
