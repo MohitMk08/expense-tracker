@@ -1,24 +1,25 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const CurrencyContext = createContext();
 
-export function CurrencyProvider({ children }) {
-    const [currency, setCurrency] = useState("INR");
+const STORAGE_KEY = "selected_currency";
 
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat("en-IN", {
-            style: "currency",
-            currency,
-        }).format(amount);
-    };
+export const CurrencyProvider = ({ children }) => {
+    // ✅ Load from localStorage (initial)
+    const [baseCurrency, setBaseCurrency] = useState(() => {
+        return localStorage.getItem(STORAGE_KEY) || "INR";
+    });
+
+    // ✅ Save to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem(STORAGE_KEY, baseCurrency);
+    }, [baseCurrency]);
 
     return (
-        <CurrencyContext.Provider
-            value={{ currency, setCurrency, formatCurrency }}
-        >
+        <CurrencyContext.Provider value={{ baseCurrency, setBaseCurrency }}>
             {children}
         </CurrencyContext.Provider>
     );
-}
+};
 
-export const useCurrency = () => useContext(CurrencyContext);
+export const useCurrencyContext = () => useContext(CurrencyContext);

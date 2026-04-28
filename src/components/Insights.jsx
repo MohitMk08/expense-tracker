@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
-import { useCurrency } from "../context/CurrencyContext";
+import { useCurrencyContext } from "../context/CurrencyContext";
+import { useRates } from "../hooks/useRates";
+import { formatCurrencyValue } from "../utils/currencyFormatter";
 
 export default function Insights({ expenses }) {
     if (!expenses || expenses.length === 0) return null;
 
-    const { formatCurrency } = useCurrency();
+    const { baseCurrency } = useCurrencyContext();
+    const { rates } = useRates();
 
     const totalExpense = expenses
         .filter((e) => (e.type || "expense") === "expense")
@@ -15,7 +18,6 @@ export default function Insights({ expenses }) {
         .reduce((sum, e) => sum + Number(e.amount), 0);
 
     const balance = totalCredit - totalExpense;
-
 
     // 🔥 CATEGORY ANALYSIS
     const categoryMap = {};
@@ -51,7 +53,11 @@ export default function Insights({ expenses }) {
 
     if (totalExpense > 10000) {
         insights.push({
-            text: `💸 High spending detected: ${formatCurrency(totalExpense)}`,
+            text: `💸 High spending detected: ${formatCurrencyValue(
+                totalExpense,
+                baseCurrency,
+                rates
+            )}`,
             color: "var(--warning)"
         });
     }
@@ -94,17 +100,14 @@ export default function Insights({ expenses }) {
                 </span>
             </div>
 
-            {/* EMPTY STATE */}
+            {/* EMPTY */}
             {insights.length === 0 && (
-                <p
-                    className="text-sm"
-                    style={{ color: "var(--text-muted)" }}
-                >
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                     No insights yet
                 </p>
             )}
 
-            {/* INSIGHTS LIST */}
+            {/* LIST */}
             <div className="space-y-2">
                 {insights.map((item, i) => (
                     <motion.div

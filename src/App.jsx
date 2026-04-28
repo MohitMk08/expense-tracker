@@ -7,20 +7,26 @@ import Insights from "./components/Insights";
 import ExpenseChart from "./components/ExpenseChart";
 import Loader from "./components/Loader";
 import { exportToPDF } from "./utils/exportPDF";
+
 import { useAuth } from "./context/AuthContext";
+import { useCurrencyContext } from "./context/CurrencyContext";
+import { useRates } from "./hooks/useRates"; // ✅ NEW
+
 import { useEffect, useState, useMemo } from "react";
 import { subscribeToUserExpenses } from "./firebase/expenseService";
-import { useCurrency } from "./context/CurrencyContext";
-
-
 
 export default function App() {
   const { user } = useAuth();
+
   const [expenses, setExpenses] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState("all");
   const [appLoading, setAppLoading] = useState(true);
-  // const { formatCurrency } = useCurrency();
-  const { currency } = useCurrency();
+
+  // ✅ FIXED: use baseCurrency (not currency)
+  const { baseCurrency } = useCurrencyContext();
+
+  // ✅ NEW: get rates
+  const { rates } = useRates();
 
   useEffect(() => {
     if (!user) return;
@@ -67,7 +73,11 @@ export default function App() {
 
   const balance = totalCredit - totalExpense;
 
+  // ✅ FIXED PDF EXPORT
   const handleExport = () => {
+    console.log("Currency:", baseCurrency);
+    console.log("Rates:", rates);
+
     exportToPDF(
       filteredExpenses,
       {
@@ -76,8 +86,9 @@ export default function App() {
         balance,
       },
       selectedEvent,
-      currency,
-      user
+      baseCurrency, // ✅ correct currency
+      user,
+      rates // ✅ IMPORTANT (conversion depends on this)
     );
   };
 
@@ -100,7 +111,7 @@ export default function App() {
       style={{ background: "var(--bg)", color: "var(--text)" }}
     >
 
-      {/* 🌈 PREMIUM SOFT BACKGROUND BLOBS */}
+      {/* 🌈 BACKGROUND BLOBS */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
         <div
           className="absolute top-20 left-20 w-72 h-72 rounded-full blur-3xl opacity-20"
@@ -184,7 +195,7 @@ export default function App() {
           {/* 🔹 CHART */}
           <ExpenseChart expenses={filteredExpenses} />
 
-          {/* 🔹 ADD EXPENSE */}
+          {/* 🔹 ADD */}
           <AddExpense user={user} eventOptions={eventOptions} />
 
           {/* 🔹 LIST */}

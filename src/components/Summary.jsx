@@ -1,28 +1,54 @@
-import { useAuth } from "../context/AuthContext";
-import { useCurrency } from "../context/CurrencyContext";
+import { useCurrencyContext } from "../context/CurrencyContext";
+import { useRates } from "../hooks/useRates";
+import { convertFromINR } from "../services/currencyService";
+import { useAnimatedNumber } from "../hooks/useAnimatedNumber";
 
 export default function Summary({ totalExpense, totalCredit, balance }) {
-    const { user } = useAuth();
-    const { formatCurrency } = useCurrency();
+    const { baseCurrency } = useCurrencyContext();
+    const { rates } = useRates();
+
+    // ✅ Convert from INR → selected currency
+    const convertedExpense = rates
+        ? convertFromINR(totalExpense, baseCurrency, rates)
+        : totalExpense;
+
+    const convertedIncome = rates
+        ? convertFromINR(totalCredit, baseCurrency, rates)
+        : totalCredit;
+
+    const convertedBalance = convertedIncome - convertedExpense;
+
+    // ✅ Animate values
+    const animatedExpense = useAnimatedNumber(convertedExpense);
+    const animatedIncome = useAnimatedNumber(convertedIncome);
+    const animatedBalance = useAnimatedNumber(convertedBalance);
+
+    // ✅ Currency symbols
+    const symbols = {
+        INR: "₹",
+        USD: "$",
+        EUR: "€",
+        GBP: "£",
+    };
 
     return (
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
 
             <SummaryCard
                 label="Expense"
-                value={formatCurrency(totalExpense)}
+                value={`${symbols[baseCurrency]} ${animatedExpense.toFixed(2)}`}
                 color="var(--danger)"
             />
 
             <SummaryCard
                 label="Credit"
-                value={formatCurrency(totalCredit)}
+                value={`${symbols[baseCurrency]} ${animatedIncome.toFixed(2)}`}
                 color="var(--success)"
             />
 
             <SummaryCard
                 label="Balance"
-                value={formatCurrency(balance)}
+                value={`${symbols[baseCurrency]} ${animatedBalance.toFixed(2)}`}
                 color="var(--primary)"
             />
 

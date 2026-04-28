@@ -5,7 +5,10 @@ import {
     ResponsiveContainer
 } from "recharts";
 import { Card } from "../ui";
-import { useCurrency } from "../context/CurrencyContext";
+import { useCurrencyContext } from "../context/CurrencyContext";
+import { useRates } from "../hooks/useRates";
+import { convertFromINR } from "../services/currencyService";
+import { formatCurrencyValue } from "../utils/currencyFormatter";
 
 const COLORS = [
     "var(--primary)",
@@ -17,12 +20,14 @@ const COLORS = [
 ];
 
 export default function ExpenseChart({ expenses }) {
-    const { formatCurrency } = useCurrency();
+    const { baseCurrency } = useCurrencyContext();
+    const { rates } = useRates();
 
     if (!expenses || expenses.length === 0) return null;
 
     const map = {};
 
+    // ✅ Build category totals (INR)
     expenses.forEach((e) => {
         if ((e.type || "expense") !== "expense") return;
 
@@ -42,13 +47,24 @@ export default function ExpenseChart({ expenses }) {
         );
     }
 
-    const data = Object.keys(map).map((key, index) => ({
-        name: key,
-        value: map[key],
-        fill: COLORS[index % COLORS.length],
-    }));
+    // ✅ Convert AFTER summing (important)
+    const data = Object.keys(map).map((key, index) => {
+        const convertedValue = rates
+            ? convertFromINR(map[key], baseCurrency, rates)
+            : map[key];
 
-    const total = data.reduce((sum, d) => sum + d.value, 0);
+        return {
+            name: key,
+            value: convertedValue,
+            fill: COLORS[index % COLORS.length],
+        };
+    });
+
+    const totalINR = Object.values(map).reduce((sum, val) => sum + val, 0);
+
+    const total = rates
+        ? convertFromINR(totalINR, baseCurrency, rates)
+        : totalINR;
 
     return (
         <Card className="space-y-4">
@@ -72,8 +88,11 @@ export default function ExpenseChart({ expenses }) {
                             paddingAngle={3}
                         />
 
+                        {/* ✅ Tooltip fixed */}
                         <Tooltip
-                            formatter={(value) => formatCurrency(value)}
+                            formatter={(value) =>
+                                formatCurrencyValue(value, baseCurrency, rates)
+                            }
                             contentStyle={{
                                 background: "var(--card)",
                                 borderRadius: "12px",
@@ -97,7 +116,7 @@ export default function ExpenseChart({ expenses }) {
                         className="text-xl font-bold"
                         style={{ color: "var(--text)" }}
                     >
-                        {formatCurrency(total)}
+                        {formatCurrencyValue(totalINR, baseCurrency, rates)}
                     </p>
                 </div>
             </div>
@@ -130,7 +149,7 @@ export default function ExpenseChart({ expenses }) {
                             className="text-sm font-semibold"
                             style={{ color: "var(--text-muted)" }}
                         >
-                            {formatCurrency(item.value)}
+                            {formatCurrencyValue(item.value, baseCurrency, rates)}
                         </span>
                     </div>
                 ))}

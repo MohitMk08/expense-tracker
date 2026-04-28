@@ -3,16 +3,36 @@ import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Card, Badge, Button } from "../ui";
-import { useCurrency } from "../context/CurrencyContext";
+import { useCurrencyContext } from "../context/CurrencyContext";
+import { useRates } from "../hooks/useRates";
+import { convertFromINR } from "../services/currencyService";
+import { useAnimatedNumber } from "../hooks/useAnimatedNumber";
+import { formatCurrencyValue } from "../utils/currencyFormatter";
 
 export default function ExpenseCard({ expense }) {
     const { user } = useAuth();
     const [showImage, setShowImage] = useState(false);
-    const { formatCurrency } = useCurrency();
+    const { baseCurrency } = useCurrencyContext();
+    const { rates } = useRates();
 
     if (!expense) return null;
 
     const isCredit = expense.type === "credit";
+
+    // ✅ ALWAYS keep number safe
+    const convertedAmount = rates
+        ? convertFromINR(expense.amount, baseCurrency, rates)
+        : expense.amount;
+
+    // ✅ Animate number
+    const animatedAmount = useAnimatedNumber(convertedAmount);
+
+    // ✅ Format ONLY for display
+    const displayAmount = formatCurrencyValue(
+        animatedAmount,
+        baseCurrency,
+        rates
+    );
 
     const remove = async () => {
         if (expense.uid !== user?.uid) return;
@@ -22,6 +42,9 @@ export default function ExpenseCard({ expense }) {
 
         await deleteExpense(expense.id);
     };
+
+    // console.log("Rates:", rates);
+    // console.log("Base Currency:", baseCurrency);
 
     return (
         <>
@@ -33,7 +56,7 @@ export default function ExpenseCard({ expense }) {
             >
                 <Card className="relative overflow-hidden group transition-all">
 
-                    {/* 🎨 LEFT ACCENT BAR */}
+                    {/* LEFT ACCENT */}
                     <div
                         className="absolute left-0 top-0 h-full w-1"
                         style={{
@@ -47,7 +70,6 @@ export default function ExpenseCard({ expense }) {
 
                         {/* LEFT */}
                         <div className="flex flex-col gap-1">
-
                             <p
                                 className="text-sm font-semibold tracking-tight"
                                 style={{ color: "var(--text)" }}
@@ -99,7 +121,16 @@ export default function ExpenseCard({ expense }) {
                                     }}
                                 >
                                     {isCredit ? "+" : "-"}{" "}
-                                    {formatCurrency(expense.amount)}
+
+                                    <motion.span
+                                        key={baseCurrency + convertedAmount}
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.25 }}
+                                        className="inline-block"
+                                    >
+                                        {displayAmount}
+                                    </motion.span>
                                 </p>
                             </div>
 
@@ -114,7 +145,7 @@ export default function ExpenseCard({ expense }) {
                         </div>
                     </div>
 
-                    {/* 🖼 IMAGE */}
+                    {/* IMAGE */}
                     {expense.imageBase64 && (
                         <motion.div
                             initial={{ opacity: 0 }}
@@ -150,7 +181,7 @@ export default function ExpenseCard({ expense }) {
                 </Card>
             </motion.div>
 
-            {/* 🔥 FULLSCREEN IMAGE */}
+            {/* FULLSCREEN IMAGE */}
             <AnimatePresence>
                 {showImage && (
                     <motion.div

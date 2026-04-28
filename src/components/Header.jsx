@@ -1,8 +1,7 @@
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
-import { useState } from "react";
 import { updateCurrency } from "../firebase/userService";
-import { useCurrency } from "../context/CurrencyContext";
+import { useCurrencyContext } from "../context/CurrencyContext";
 
 const currencies = [
     { code: "INR", label: "₹ INR" },
@@ -14,13 +13,22 @@ const currencies = [
 export default function Header() {
     const { dark, setDark } = useTheme();
     const { user, logout } = useAuth();
-    const { currency, setCurrency } = useCurrency();
 
-    const [open, setOpen] = useState(false);
+    // ✅ FIXED: correct names
+    const { baseCurrency, setBaseCurrency } = useCurrencyContext();
 
     const handleCurrency = async (code) => {
-        await updateCurrency(user.uid, code);
-        setOpen(false);
+        // ✅ Update UI immediately (important)
+        setBaseCurrency(code);
+
+        // ✅ Sync with backend (optional but good)
+        if (user?.uid) {
+            try {
+                await updateCurrency(user.uid, code);
+            } catch (err) {
+                console.error("Currency update failed", err);
+            }
+        }
     };
 
     return (
@@ -33,7 +41,7 @@ export default function Header() {
                 </h1>
 
                 <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                    {user.email}
+                    {user?.email}
                 </p>
             </div>
 
@@ -43,8 +51,8 @@ export default function Header() {
                 {/* Currency */}
                 <div className="relative w-full md:w-auto">
                     <select
-                        value={currency}
-                        onChange={(e) => setCurrency(e.target.value)}
+                        value={baseCurrency} // ✅ FIXED
+                        onChange={(e) => handleCurrency(e.target.value)} // ✅ FIXED
                         className="w-full md:w-auto appearance-none px-3 py-2 pr-8 rounded-xl text-sm font-medium"
                         style={{
                             background: "var(--card)",
