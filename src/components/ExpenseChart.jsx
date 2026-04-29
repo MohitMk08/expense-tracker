@@ -76,8 +76,8 @@ export default function ExpenseChart({ expenses }) {
                 📊 Expense Breakdown
             </h3>
 
-            <div id="chart-export" className="w-full h-65 relative">
-                <ResponsiveContainer width="100%" height="100%">
+            <div id="chart-export" className="w-full h-64 relative">
+                <ResponsiveContainer width="100%" height={260} >
                     <PieChart>
                         <Pie
                             data={data}
