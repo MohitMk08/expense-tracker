@@ -7,7 +7,13 @@ import { useCurrencyContext } from "../context/CurrencyContext";
 import { useRates } from "../hooks/useRates";
 import { convertFromINR } from "../services/currencyService";
 import { useAnimatedNumber } from "../hooks/useAnimatedNumber";
-import { formatCurrencyValue } from "../utils/currencyFormatter";
+
+const symbols = {
+    INR: "₹",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+};
 
 export default function ExpenseCard({ expense }) {
     const { user } = useAuth();
@@ -19,20 +25,16 @@ export default function ExpenseCard({ expense }) {
 
     const isCredit = expense.type === "credit";
 
-    // ✅ ALWAYS keep number safe
+    // ✅ SINGLE CONVERSION (FIXED)
     const convertedAmount = rates
-        ? convertFromINR(expense.amount, baseCurrency, rates)
-        : expense.amount;
+        ? convertFromINR(Number(expense.amount), baseCurrency, rates)
+        : Number(expense.amount);
 
-    // ✅ Animate number
+    // ✅ animate AFTER conversion
     const animatedAmount = useAnimatedNumber(convertedAmount);
 
-    // ✅ Format ONLY for display
-    const displayAmount = formatCurrencyValue(
-        animatedAmount,
-        baseCurrency,
-        rates
-    );
+    // ✅ format ONLY once
+    const displayAmount = `${symbols[baseCurrency] || "₹"} ${animatedAmount.toFixed(2)}`;
 
     const remove = async () => {
         if (expense.uid !== user?.uid) return;
@@ -42,9 +44,6 @@ export default function ExpenseCard({ expense }) {
 
         await deleteExpense(expense.id);
     };
-
-    // console.log("Rates:", rates);
-    // console.log("Base Currency:", baseCurrency);
 
     return (
         <>
@@ -159,23 +158,6 @@ export default function ExpenseCard({ expense }) {
                                 alt="Receipt"
                                 className="h-44 w-full object-cover transition duration-300 group-hover:scale-105"
                             />
-
-                            <div
-                                className="absolute inset-0 flex items-center justify-center transition"
-                                style={{ background: "rgba(0,0,0,0)" }}
-                                onMouseEnter={(e) =>
-                                (e.currentTarget.style.background =
-                                    "rgba(0,0,0,0.35)")
-                                }
-                                onMouseLeave={(e) =>
-                                (e.currentTarget.style.background =
-                                    "rgba(0,0,0,0)")
-                                }
-                            >
-                                <span className="text-white text-sm opacity-0 group-hover:opacity-100 transition">
-                                    View
-                                </span>
-                            </div>
                         </motion.div>
                     )}
                 </Card>
@@ -199,7 +181,6 @@ export default function ExpenseCard({ expense }) {
                             src={expense.imageBase64}
                             alt="Full Receipt"
                             className="max-h-[90vh] max-w-[90vw] rounded-2xl"
-                            style={{ boxShadow: "var(--shadow-md)" }}
                         />
                     </motion.div>
                 )}

@@ -1,7 +1,14 @@
 import { motion } from "framer-motion";
 import { useCurrencyContext } from "../context/CurrencyContext";
 import { useRates } from "../hooks/useRates";
-import { formatCurrencyValue } from "../utils/currencyFormatter";
+import { convertFromINR } from "../services/currencyService";
+
+const symbols = {
+    INR: "₹",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+};
 
 export default function Insights({ expenses }) {
     if (!expenses || expenses.length === 0) return null;
@@ -9,25 +16,34 @@ export default function Insights({ expenses }) {
     const { baseCurrency } = useCurrencyContext();
     const { rates } = useRates();
 
+    // ✅ convert helper (single source inside this file)
+    const convert = (amount) =>
+        rates
+            ? convertFromINR(Number(amount), baseCurrency, rates)
+            : Number(amount);
+
+    // ✅ TOTALS (converted)
     const totalExpense = expenses
         .filter((e) => (e.type || "expense") === "expense")
-        .reduce((sum, e) => sum + Number(e.amount), 0);
+        .reduce((sum, e) => sum + convert(e.amount), 0);
 
     const totalCredit = expenses
         .filter((e) => e.type === "credit")
-        .reduce((sum, e) => sum + Number(e.amount), 0);
+        .reduce((sum, e) => sum + convert(e.amount), 0);
 
     const balance = totalCredit - totalExpense;
 
-    // 🔥 CATEGORY ANALYSIS
+    // 🔥 CATEGORY ANALYSIS (FIXED)
     const categoryMap = {};
+
     expenses.forEach((e) => {
+        if ((e.type || "expense") !== "expense") return;
+
         const key = e.event || "general";
+
         if (!categoryMap[key]) categoryMap[key] = 0;
 
-        if ((e.type || "expense") === "expense") {
-            categoryMap[key] += Number(e.amount);
-        }
+        categoryMap[key] += convert(e.amount); // ✅ FIXED
     });
 
     const topCategory = Object.entries(categoryMap).sort(
@@ -53,11 +69,7 @@ export default function Insights({ expenses }) {
 
     if (totalExpense > 10000) {
         insights.push({
-            text: `💸 High spending detected: ${formatCurrencyValue(
-                totalExpense,
-                baseCurrency,
-                rates
-            )}`,
+            text: `💸 High spending detected: ${symbols[baseCurrency] || "₹"} ${totalExpense.toFixed(2)}`,
             color: "var(--warning)"
         });
     }

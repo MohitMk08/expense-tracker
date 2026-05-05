@@ -3,52 +3,51 @@ import { useRates } from "../hooks/useRates";
 import { convertFromINR } from "../services/currencyService";
 import { useAnimatedNumber } from "../hooks/useAnimatedNumber";
 
+const symbols = {
+    INR: "₹",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+};
+
 export default function Summary({ totalExpense, totalCredit, balance }) {
     const { baseCurrency } = useCurrencyContext();
     const { rates } = useRates();
 
-    // ✅ Convert from INR → selected currency
-    const convertedExpense = rates
-        ? convertFromINR(totalExpense, baseCurrency, rates)
-        : totalExpense;
+    // ✅ SAFE conversion helper
+    const convert = (amount) =>
+        rates
+            ? convertFromINR(Number(amount), baseCurrency, rates)
+            : Number(amount);
 
-    const convertedIncome = rates
-        ? convertFromINR(totalCredit, baseCurrency, rates)
-        : totalCredit;
+    // ✅ Convert ALL from INR (consistent)
+    const convertedExpense = convert(totalExpense);
+    const convertedIncome = convert(totalCredit);
+    const convertedBalance = convert(balance); // 🔥 FIXED
 
-    const convertedBalance = convertedIncome - convertedExpense;
-
-    // ✅ Animate values
+    // ✅ Animate AFTER conversion
     const animatedExpense = useAnimatedNumber(convertedExpense);
     const animatedIncome = useAnimatedNumber(convertedIncome);
     const animatedBalance = useAnimatedNumber(convertedBalance);
-
-    // ✅ Currency symbols
-    const symbols = {
-        INR: "₹",
-        USD: "$",
-        EUR: "€",
-        GBP: "£",
-    };
 
     return (
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
 
             <SummaryCard
                 label="Expense"
-                value={`${symbols[baseCurrency]} ${animatedExpense.toFixed(2)}`}
+                value={`${symbols[baseCurrency] || "₹"} ${animatedExpense.toFixed(2)}`}
                 color="var(--danger)"
             />
 
             <SummaryCard
                 label="Credit"
-                value={`${symbols[baseCurrency]} ${animatedIncome.toFixed(2)}`}
+                value={`${symbols[baseCurrency] || "₹"} ${animatedIncome.toFixed(2)}`}
                 color="var(--success)"
             />
 
             <SummaryCard
                 label="Balance"
-                value={`${symbols[baseCurrency]} ${animatedBalance.toFixed(2)}`}
+                value={`${symbols[baseCurrency] || "₹"} ${animatedBalance.toFixed(2)}`}
                 color="var(--primary)"
             />
 

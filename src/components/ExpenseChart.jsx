@@ -8,7 +8,6 @@ import { Card } from "../ui";
 import { useCurrencyContext } from "../context/CurrencyContext";
 import { useRates } from "../hooks/useRates";
 import { convertFromINR } from "../services/currencyService";
-import { formatCurrencyValue } from "../utils/currencyFormatter";
 
 const COLORS = [
     "var(--primary)",
@@ -18,6 +17,13 @@ const COLORS = [
     "#3b82f6",
     "#a855f7"
 ];
+
+const symbols = {
+    INR: "₹",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+};
 
 export default function ExpenseChart({ expenses }) {
     const { baseCurrency } = useCurrencyContext();
@@ -47,7 +53,7 @@ export default function ExpenseChart({ expenses }) {
         );
     }
 
-    // ✅ Convert AFTER summing (important)
+    // ✅ Convert ONCE here
     const data = Object.keys(map).map((key, index) => {
         const convertedValue = rates
             ? convertFromINR(map[key], baseCurrency, rates)
@@ -60,11 +66,8 @@ export default function ExpenseChart({ expenses }) {
         };
     });
 
-    const totalINR = Object.values(map).reduce((sum, val) => sum + val, 0);
-
-    const total = rates
-        ? convertFromINR(totalINR, baseCurrency, rates)
-        : totalINR;
+    // ✅ total from converted data (not INR)
+    const total = data.reduce((sum, d) => sum + d.value, 0);
 
     return (
         <Card className="space-y-4">
@@ -77,7 +80,7 @@ export default function ExpenseChart({ expenses }) {
             </h3>
 
             <div id="chart-export" className="w-full h-64 relative">
-                <ResponsiveContainer width="100%" height={260} >
+                <ResponsiveContainer width="100%" height={260}>
                     <PieChart>
                         <Pie
                             data={data}
@@ -88,10 +91,10 @@ export default function ExpenseChart({ expenses }) {
                             paddingAngle={3}
                         />
 
-                        {/* ✅ Tooltip fixed */}
+                        {/* ✅ FIXED TOOLTIP (NO DOUBLE CONVERSION) */}
                         <Tooltip
                             formatter={(value) =>
-                                formatCurrencyValue(value, baseCurrency, rates)
+                                `${symbols[baseCurrency] || "₹"} ${Number(value).toFixed(2)}`
                             }
                             contentStyle={{
                                 background: "var(--card)",
@@ -116,7 +119,7 @@ export default function ExpenseChart({ expenses }) {
                         className="text-xl font-bold"
                         style={{ color: "var(--text)" }}
                     >
-                        {formatCurrencyValue(totalINR, baseCurrency, rates)}
+                        {symbols[baseCurrency] || "₹"} {total.toFixed(2)}
                     </p>
                 </div>
             </div>
@@ -149,7 +152,7 @@ export default function ExpenseChart({ expenses }) {
                             className="text-sm font-semibold"
                             style={{ color: "var(--text-muted)" }}
                         >
-                            {formatCurrencyValue(item.value, baseCurrency, rates)}
+                            {symbols[baseCurrency] || "₹"} {item.value.toFixed(2)}
                         </span>
                     </div>
                 ))}
